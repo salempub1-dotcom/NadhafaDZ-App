@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "NadhafaDZ",
+    "slug": "nadhafadz-app",
+    "scheme": "nadhafadz",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router", "expo-location", "expo-notifications"],
+    "android": {
+      "package": "com.nadhafadz.app",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "POST_NOTIFICATIONS"]
+    },
+    "ios": {
+      "bundleIdentifier": "com.nadhafadz.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "نستخدم موقعك فقط عند الإبلاغ عن مرور شاحنة النظافة بالقرب منك."
+      }
+    },
+    "extra": {
+      "router": { "origin": false }
+    }
+  }
+}
