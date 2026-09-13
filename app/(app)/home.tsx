@@ -1,5 +1,5 @@
 import { ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
 import { useNeighborhood } from '@/contexts/NeighborhoodContext';
 
@@ -36,7 +36,7 @@ export default function HomeScreen() {
 
         <View style={styles.statusCard}>
           <View style={styles.statusHead}>
-            <View style={styles.statusIcon}><Ionicons name="truck-outline" size={22} color="#168A55" /></View>
+            <View style={styles.statusIcon}><Ionicons name="trash-bin-outline" size={22} color="#168A55" /></View>
             <Text style={styles.label}>حالة شاحنة النظافة</Text>
           </View>
           <Text style={styles.status}>لم يتم رصدها بعد</Text>
