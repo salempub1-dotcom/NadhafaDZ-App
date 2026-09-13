@@ -21,6 +21,7 @@
     "expo-status-bar": "latest",
     "react": "latest",
     "react-native": "latest",
+    "react-native-maps": "latest",
     "react-native-safe-area-context": "latest",
     "react-native-screens": "latest",
     "react-native-url-polyfill": "latest"
