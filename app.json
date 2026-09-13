@@ -18,11 +18,7 @@
       }
     },
     "extra": {
-      "router": { "origin": false },
-      "eas": {
-        "projectId": "d77a0fd0-75b6-4571-983a-e1ac98601013"
-      }
-    },
-    "owner": "almiradjapps-team"
+      "router": { "origin": false }
+    }
   }
 }
