@@ -2,12 +2,13 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const supabaseUrl =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ??
+  'https://nudltxloyxvlbiukswur.supabase.co';
 
-if (!supabaseUrl || !supabasePublishableKey) {
-  throw new Error('Missing Supabase environment variables. Copy .env.example to .env and fill the project URL and publishable key.');
-}
+const supabasePublishableKey =
+  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+  'sb_publishable_il9H0Ua2tHEonBso9CMFdw_d-YZD-Fd';
 
 export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {
