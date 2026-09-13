@@ -1,14 +1,28 @@
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { useNeighborhood } from '@/contexts/NeighborhoodContext';
 
 export default function HomeScreen() {
+  const { neighborhood, setNeighborhood } = useNeighborhood();
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
         <View>
           <Text style={styles.brand}>NadhafaDZ</Text>
           <Text style={styles.title}>نظافة حينا</Text>
-          <Text style={styles.subtitle}>حي بن يوب • براقي</Text>
+          <Text style={styles.subtitle}>حي {neighborhood} • براقي</Text>
+        </View>
+
+        <View style={styles.selectorCard}>
+          <Text style={styles.selectorTitle}>اختر حيّك</Text>
+          <View style={styles.selectorRow}>
+            {(['بن يوب','العميرات'] as const).map((item) => (
+              <Pressable key={item} onPress={() => setNeighborhood(item)} style={[styles.choice, neighborhood === item && styles.choiceActive]}>
+                <Text style={[styles.choiceText, neighborhood === item && styles.choiceTextActive]}>حي {item}</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={styles.statusCard}>
@@ -19,7 +33,7 @@ export default function HomeScreen() {
 
         <Pressable style={styles.primary} onPress={() => router.push('/(app)/report')}>
           <Text style={styles.primaryTitle}>رأيت شاحنة النظافة الآن</Text>
-          <Text style={styles.primarySub}>شارك موقع الشاحنة فقط لتنبيه سكان الحي</Text>
+          <Text style={styles.primarySub}>شارك موقع الشاحنة فقط لتنبيه سكان حي {neighborhood}</Text>
         </Pressable>
 
         <Text style={styles.sectionTitle}>خدمات سريعة</Text>
@@ -43,4 +57,4 @@ export default function HomeScreen() {
   );
 }
 
-const styles=StyleSheet.create({safe:{flex:1,backgroundColor:'#F5FAF7'},content:{padding:20,gap:18},brand:{color:'#168A55',fontSize:15,fontWeight:'800',textAlign:'right'},title:{fontSize:29,fontWeight:'900',color:'#17352A',textAlign:'right'},subtitle:{color:'#6B7A73',textAlign:'right',marginTop:4},statusCard:{backgroundColor:'#fff',borderRadius:22,padding:20,borderWidth:1,borderColor:'#DCE7E1'},label:{textAlign:'right',color:'#6B7A73',fontWeight:'700'},status:{textAlign:'right',fontSize:24,fontWeight:'900',color:'#17352A',marginTop:8},muted:{color:'#6B7A73',textAlign:'right',lineHeight:20,marginTop:6},primary:{backgroundColor:'#168A55',borderRadius:22,padding:22},primaryTitle:{color:'#fff',fontWeight:'900',fontSize:20,textAlign:'center'},primarySub:{color:'#EAF7F0',fontSize:12,textAlign:'center',marginTop:6},sectionTitle:{textAlign:'right',fontSize:18,fontWeight:'900',color:'#17352A'},row:{flexDirection:'row',gap:12},smallCard:{flex:1,backgroundColor:'#fff',padding:18,borderRadius:18,borderWidth:1,borderColor:'#DCE7E1'},smallTitle:{fontWeight:'900',fontSize:16,color:'#17352A',textAlign:'right'},info:{backgroundColor:'#EAF7F0',borderRadius:18,padding:18},infoTitle:{textAlign:'right',fontWeight:'900',color:'#168A55'},infoText:{textAlign:'right',color:'#17352A',lineHeight:22,marginTop:7}});
+const styles=StyleSheet.create({safe:{flex:1,backgroundColor:'#F5FAF7'},content:{padding:20,gap:18},brand:{color:'#168A55',fontSize:15,fontWeight:'800',textAlign:'right'},title:{fontSize:29,fontWeight:'900',color:'#17352A',textAlign:'right'},subtitle:{color:'#6B7A73',textAlign:'right',marginTop:4},selectorCard:{backgroundColor:'#fff',borderRadius:20,padding:18,borderWidth:1,borderColor:'#DCE7E1'},selectorTitle:{textAlign:'right',fontWeight:'900',color:'#17352A',marginBottom:12},selectorRow:{flexDirection:'row',gap:10},choice:{flex:1,borderRadius:14,paddingVertical:12,borderWidth:1,borderColor:'#CFE1D7',backgroundColor:'#F7FBF9'},choiceActive:{backgroundColor:'#168A55',borderColor:'#168A55'},choiceText:{textAlign:'center',fontWeight:'800',color:'#17352A'},choiceTextActive:{color:'#fff'},statusCard:{backgroundColor:'#fff',borderRadius:22,padding:20,borderWidth:1,borderColor:'#DCE7E1'},label:{textAlign:'right',color:'#6B7A73',fontWeight:'700'},status:{textAlign:'right',fontSize:24,fontWeight:'900',color:'#17352A',marginTop:8},muted:{color:'#6B7A73',textAlign:'right',lineHeight:20,marginTop:6},primary:{backgroundColor:'#168A55',borderRadius:22,padding:22},primaryTitle:{color:'#fff',fontWeight:'900',fontSize:20,textAlign:'center'},primarySub:{color:'#EAF7F0',fontSize:12,textAlign:'center',marginTop:6},sectionTitle:{textAlign:'right',fontSize:18,fontWeight:'900',color:'#17352A'},row:{flexDirection:'row',gap:12},smallCard:{flex:1,backgroundColor:'#fff',padding:18,borderRadius:18,borderWidth:1,borderColor:'#DCE7E1'},smallTitle:{fontWeight:'900',fontSize:16,color:'#17352A',textAlign:'right'},info:{backgroundColor:'#EAF7F0',borderRadius:18,padding:18},infoTitle:{textAlign:'right',fontWeight:'900',color:'#168A55'},infoText:{textAlign:'right',color:'#17352A',lineHeight:22,marginTop:7}});
