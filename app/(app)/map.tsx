@@ -77,6 +77,13 @@ export default function MapScreen() {
       });
 
       if (rpcError) throw rpcError;
+
+      // Best effort: the report is already confirmed even if push delivery fails.
+      const { error: notifyError } = await supabase.functions.invoke('notify-neighborhood', {
+        body: { report_id: report.id },
+      });
+      if (notifyError) console.warn('Push notification dispatch failed:', notifyError.message);
+
       Alert.alert('تم التأكيد', 'شكرًا. أصبح هذا الرصد مؤكدًا وسيظهر لسكان الحي.');
       await loadFeed();
     } catch (e: any) {
