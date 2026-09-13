@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, ImageBackground, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 
