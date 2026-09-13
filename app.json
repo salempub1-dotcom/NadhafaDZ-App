@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "NadhafaDZ",
-    "slug": "nadhafadz-app",
+    "slug": "nadhafadz",
     "scheme": "nadhafadz",
     "version": "0.1.0",
     "orientation": "portrait",
@@ -20,9 +20,9 @@
     "extra": {
       "router": { "origin": false },
       "eas": {
-        "projectId": "2e172b41-8dff-4462-86be-ae68a4899814"
+        "projectId": "e40372cd-ac42-4c2b-8a68-97241aae7782"
       }
     },
-    "owner": "almiradjapp"
+    "owner": "nadhafadzs-team"
   }
 }
