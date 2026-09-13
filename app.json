@@ -6,7 +6,13 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router", "expo-location", "expo-notifications"],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e40372cd-ac42-4c2b-8a68-97241aae7782"
+    },
+    "plugins": ["expo-router", "expo-location", "expo-notifications", "expo-updates"],
     "android": {
       "package": "com.nadhafadz.app",
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "POST_NOTIFICATIONS"]
