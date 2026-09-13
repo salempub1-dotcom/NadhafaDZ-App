@@ -1,11 +1,9 @@
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useAuth } from '@/contexts/AuthContext';
 
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
-
-const iconMap: Record<string, { active: IconName; inactive: IconName }> = {
+const iconMap: Record<string, { active: string; inactive: string }> = {
   home: { active: 'home', inactive: 'home-outline' },
   map: { active: 'map', inactive: 'map-outline' },
   report: { active: 'megaphone', inactive: 'megaphone-outline' },
@@ -15,7 +13,13 @@ const iconMap: Record<string, { active: IconName; inactive: IconName }> = {
 
 export default function AppLayout() {
   const { session, loading } = useAuth();
-  if (loading) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color="#168A55" /></View>;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color="#168A55" />
+      </View>
+    );
+  }
   if (!session) return <Redirect href="/(auth)/login" />;
 
   return (
@@ -42,14 +46,16 @@ export default function AppLayout() {
         tabBarIcon: ({ focused, color }) => {
           const pair = iconMap[route.name] ?? iconMap.home;
           return (
-            <View style={{
-              width: 40,
-              height: 32,
-              borderRadius: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: focused ? '#E8F6EF' : 'transparent',
-            }}>
+            <View
+              style={{
+                width: 40,
+                height: 32,
+                borderRadius: 16,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: focused ? '#E8F6EF' : 'transparent',
+              }}
+            >
               <Ionicons name={focused ? pair.active : pair.inactive} size={22} color={color} />
             </View>
           );
