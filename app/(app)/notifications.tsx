@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNeighborhood } from '@/contexts/NeighborhoodContext';
+import { getNeighborhoodDisplayName, useNeighborhood } from '@/contexts/NeighborhoodContext';
 import { disablePushToken, registerPushNotifications } from '@/lib/pushNotifications';
 import { MintBackground } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
@@ -12,6 +12,7 @@ export default function NotificationsScreen() {
   const { neighborhood } = useNeighborhood();
   const [loading, setLoading] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const neighborhoodLabel = getNeighborhoodDisplayName(neighborhood);
 
   async function enableNotifications() {
     if (!user) return;
@@ -19,7 +20,7 @@ export default function NotificationsScreen() {
     try {
       await registerPushNotifications(user.id, neighborhood);
       setEnabled(true);
-      Alert.alert('تم تفعيل التنبيهات', `سيصلك إشعار عند تأكيد مرور شاحنة النظافة في حي ${neighborhood}.`);
+      Alert.alert('تم تفعيل التنبيهات', `سيصلك إشعار عند تأكيد مرور شاحنة النظافة في ${neighborhoodLabel}.`);
     } catch (e: any) {
       Alert.alert('تعذر تفعيل التنبيهات', e?.message ?? 'حاول مرة أخرى.');
     } finally { setLoading(false); }
@@ -40,9 +41,9 @@ export default function NotificationsScreen() {
   return (
     <MintBackground>
       <SafeAreaView style={styles.safe}>
-        <Text style={styles.kicker}>إعدادات الحي</Text>
+        <Text style={styles.kicker}>إعدادات المنطقة</Text>
         <Text style={styles.title}>التنبيهات</Text>
-        <Text style={styles.sub}>الإشعارات الخاصة بحي {neighborhood}.</Text>
+        <Text style={styles.sub}>الإشعارات الخاصة بـ {neighborhoodLabel}.</Text>
 
         <View style={styles.card}>
           <View style={styles.cardHead}>
@@ -52,7 +53,7 @@ export default function NotificationsScreen() {
               <Text style={styles.status}>{enabled ? 'مفعّلة' : 'غير مفعّلة'}</Text>
             </View>
           </View>
-          <Text style={styles.body}>عند تأكيد مرور الشاحنة من مستخدم ثانٍ قريب، نرسل إشعارًا لسكان نفس الحي الذين فعّلوا التنبيهات.</Text>
+          <Text style={styles.body}>عند تأكيد مرور الشاحنة من مستخدم ثانٍ قريب، نرسل إشعارًا للسكان الذين فعّلوا تنبيهات نفس المنطقة.</Text>
           <Pressable style={[styles.button, enabled && styles.buttonSecondary, loading && styles.disabled]} onPress={enabled ? disableNotifications : enableNotifications} disabled={loading}>
             <Ionicons name={enabled ? 'notifications-off-outline' : 'notifications-outline'} size={19} color={enabled ? colors.primaryDark : '#FFFFFF'} />
             <Text style={[styles.buttonText, enabled && styles.buttonTextSecondary]}>{loading ? 'جارٍ الحفظ...' : enabled ? 'إيقاف التنبيهات' : 'تفعيل التنبيهات'}</Text>
@@ -64,7 +65,7 @@ export default function NotificationsScreen() {
             <View style={styles.iconWrap}><Ionicons name="shield-checkmark-outline" size={24} color={colors.primary} /></View>
             <Text style={styles.cardTitle}>الخصوصية</Text>
           </View>
-          <Text style={styles.body}>التنبيه مرتبط بالحي الذي اخترته فقط. لا نرسل موقعك الشخصي أو اسمك إلى السكان الآخرين.</Text>
+          <Text style={styles.body}>التنبيه مرتبط بالمنطقة التي اخترتها فقط. لا نرسل موقعك الشخصي أو اسمك إلى السكان الآخرين.</Text>
         </View>
       </SafeAreaView>
     </MintBackground>
