@@ -12,11 +12,11 @@ export type ServiceLandmark = {
 export const SERVICE_LANDMARKS: ServiceLandmark[] = [
   {
     key: 'route-1-start-houch',
-    name: 'بداية حي الحوش – قرب مدرسة 1 نوفمبر 1954',
-    latitude: 36.651688,
-    longitude: 3.108979,
+    name: 'مفترق بداية الطريق الرئيسي',
+    latitude: 36.651640,
+    longitude: 3.108959,
     neighborhood: 'العميرات',
-    kind: 'school',
+    kind: 'road',
   },
   {
     key: 'route-2-salem-dztube',
