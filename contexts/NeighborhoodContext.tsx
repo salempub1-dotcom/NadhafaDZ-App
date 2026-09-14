@@ -3,6 +3,10 @@ import { createContext, PropsWithChildren, useContext, useEffect, useMemo, useSt
 
 export type Neighborhood = 'بن يوب' | 'العميرات';
 
+export function getNeighborhoodDisplayName(value: Neighborhood | string) {
+  return value === 'العميرات' ? 'الحوش' : value;
+}
+
 type NeighborhoodContextValue = {
   neighborhood: Neighborhood;
   setNeighborhood: (value: Neighborhood) => Promise<void>;
