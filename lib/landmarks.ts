@@ -8,7 +8,9 @@ export type ServiceLandmark = {
 };
 
 // Canonical pilot-corridor points confirmed by the user from Google Maps.
-// Order matters: 1 -> 6 is the operational axis followed by the garbage truck.
+// Order matters: 1 -> 5 follows the truck's operational road from the main junction to
+// the final collection point. After point 5 the truck enters the housing complex to
+// collect waste, then exits again; the lower unpaved road is deliberately excluded.
 export const SERVICE_LANDMARKS: ServiceLandmark[] = [
   {
     key: 'route-1-start-houch',
@@ -21,14 +23,14 @@ export const SERVICE_LANDMARKS: ServiceLandmark[] = [
   {
     key: 'route-2-salem-dztube',
     name: 'Salem DZTube',
-    latitude: 36.652237,
-    longitude: 3.112296,
+    latitude: 36.652214,
+    longitude: 3.112289,
     neighborhood: 'العميرات',
     kind: 'area',
   },
   {
-    key: 'route-3-hamza-mosque',
-    name: 'مسجد حمزة',
+    key: 'route-3-sidi-ali-ben-youb-mosque',
+    name: 'مسجد حي سيد علي بن يوب (M438+469)',
     latitude: 36.652788,
     longitude: 3.115609,
     neighborhood: 'بن يوب',
@@ -36,25 +38,17 @@ export const SERVICE_LANDMARKS: ServiceLandmark[] = [
   },
   {
     key: 'route-4-baraka',
-    name: 'سبيرات البركة – حي بن يوب (M438+5M3)',
+    name: 'سبيرات البركة (M438+5M3)',
     latitude: 36.653063,
     longitude: 3.116484,
     neighborhood: 'بن يوب',
     kind: 'shop',
   },
   {
-    key: 'route-5-ben-youb',
-    name: 'بن يوب',
-    latitude: 36.653037,
-    longitude: 3.117797,
-    neighborhood: 'بن يوب',
-    kind: 'area',
-  },
-  {
-    key: 'route-6-end',
+    key: 'route-5-end',
     name: 'آخر نقطة تصل إليها الشاحنة',
-    latitude: 36.653179,
-    longitude: 3.118782,
+    latitude: 36.653178,
+    longitude: 3.118758,
     neighborhood: 'بن يوب',
     kind: 'road',
   },
