@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
-import { useNeighborhood } from '@/contexts/NeighborhoodContext';
+import { getNeighborhoodDisplayName, useNeighborhood } from '@/contexts/NeighborhoodContext';
 import { supabase } from '@/lib/supabase';
 import { MintBackground, PhotoFadeHero } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
@@ -22,6 +22,7 @@ function relativeTime(value?: string | null) {
 export default function HomeScreen() {
   const { neighborhood, setNeighborhood } = useNeighborhood();
   const [latest, setLatest] = useState<LatestTruck | null>(null);
+  const neighborhoodLabel = getNeighborhoodDisplayName(neighborhood);
 
   useEffect(() => {
     let active = true;
@@ -42,16 +43,16 @@ export default function HomeScreen() {
             <Text style={styles.heroSub}>تنبيه محلي بسيط، يساعد السكان ويدعم عمل فرق النظافة.</Text>
             <View style={styles.locationBadge}>
               <Ionicons name="location" size={16} color={colors.primary} />
-              <Text style={styles.locationText}>حي {neighborhood} • براقي</Text>
+              <Text style={styles.locationText}>{neighborhoodLabel} • براقي</Text>
             </View>
           </PhotoFadeHero>
 
           <View style={styles.selectorCard}>
-            <Text style={styles.selectorTitle}>اختر حيّك</Text>
+            <Text style={styles.selectorTitle}>اختر منطقتك</Text>
             <View style={styles.selectorRow}>
               {(['بن يوب', 'العميرات'] as const).map((item) => (
                 <Pressable key={item} onPress={() => setNeighborhood(item)} style={[styles.choice, neighborhood === item && styles.choiceActive]}>
-                  <Text style={[styles.choiceText, neighborhood === item && styles.choiceTextActive]}>حي {item}</Text>
+                  <Text style={[styles.choiceText, neighborhood === item && styles.choiceTextActive]}>{getNeighborhoodDisplayName(item)}</Text>
                 </Pressable>
               ))}
             </View>
@@ -65,7 +66,7 @@ export default function HomeScreen() {
                 <Text style={styles.status}>{latest ? 'تم رصد الشاحنة' : 'لم يتم رصدها بعد'}</Text>
               </View>
             </View>
-            <Text style={styles.muted}>{latest ? `آخر تأكيد ${relativeTime(latest.confirmed_at ?? latest.created_at)} في حي ${latest.neighborhood}.` : 'سيظهر آخر رصد مؤكد هنا فور توفر بيانات المرور.'}</Text>
+            <Text style={styles.muted}>{latest ? `آخر تأكيد ${relativeTime(latest.confirmed_at ?? latest.created_at)} في ${getNeighborhoodDisplayName(latest.neighborhood)}.` : 'سيظهر آخر رصد مؤكد هنا فور توفر بيانات المرور.'}</Text>
             {latest && (
               <Pressable style={styles.inlineAction} onPress={() => router.push('/(app)/map')}>
                 <Text style={styles.inlineActionText}>عرضها على الخريطة</Text>
@@ -77,7 +78,7 @@ export default function HomeScreen() {
           <Pressable style={styles.primary} onPress={() => router.push('/(app)/report')}>
             <View style={styles.primaryIcon}><Ionicons name="megaphone" size={27} color={colors.primary} /></View>
             <Text style={styles.primaryTitle}>رأيت شاحنة النظافة الآن</Text>
-            <Text style={styles.primarySub}>شارك موقع الشاحنة فقط لتنبيه سكان حي {neighborhood}</Text>
+            <Text style={styles.primarySub}>شارك موقع الشاحنة فقط لتنبيه سكان {neighborhoodLabel}</Text>
           </Pressable>
 
           <Text style={styles.sectionTitle}>خدمات سريعة</Text>
