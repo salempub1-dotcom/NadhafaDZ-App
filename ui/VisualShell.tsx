@@ -1,7 +1,6 @@
 import type { PropsWithChildren } from 'react';
-import { useState } from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
-import { colors, heroFallbackImage, heroImage } from '@/ui/theme';
+import { ImageBackground, type ImageSourcePropType, StyleSheet, View } from 'react-native';
+import { colors, welcomeHeroImage } from '@/ui/theme';
 
 export function MintBackground({ children }: PropsWithChildren) {
   return (
@@ -14,17 +13,14 @@ export function MintBackground({ children }: PropsWithChildren) {
   );
 }
 
-export function PhotoFadeHero({ height = 260, children }: PropsWithChildren<{ height?: number }>) {
-  const [fallback, setFallback] = useState(false);
-
+export function PhotoFadeHero({
+  height = 260,
+  imageSource = welcomeHeroImage,
+  children,
+}: PropsWithChildren<{ height?: number; imageSource?: ImageSourcePropType }>) {
   return (
     <View style={[styles.heroWrap, { height }]}>
-      <ImageBackground
-        source={fallback ? heroFallbackImage : heroImage}
-        style={styles.hero}
-        resizeMode="cover"
-        onError={() => setFallback(true)}
-      >
+      <ImageBackground source={imageSource} style={styles.hero} resizeMode="cover">
         <View style={styles.photoTint} />
         <View style={styles.fadeTop} />
         <View style={styles.fadeMid} />
@@ -58,13 +54,13 @@ const styles = StyleSheet.create({
   softGlow: { position: 'absolute', width: 360, height: 360, borderRadius: 180, backgroundColor: '#FFFFFF', opacity: 0.46, left: -80, top: 250 },
   heroWrap: { width: '100%', overflow: 'hidden', backgroundColor: '#DDEFE5' },
   hero: { flex: 1, width: '100%', justifyContent: 'flex-end', overflow: 'hidden' },
-  photoTint: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(7,60,50,0.06)' },
-  fadeTop: { position: 'absolute', left: 0, right: 0, bottom: 94, height: 82, backgroundColor: 'rgba(245,250,247,0.06)' },
-  fadeMid: { position: 'absolute', left: 0, right: 0, bottom: 42, height: 84, backgroundColor: 'rgba(245,250,247,0.42)' },
-  fadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 54, backgroundColor: colors.background },
-  waveOne: { position: 'absolute', left: -70, right: -70, bottom: 14, height: 68, borderRadius: 999, backgroundColor: 'rgba(227,242,233,0.64)', transform: [{ rotate: '-4deg' }] },
-  waveTwo: { position: 'absolute', left: -90, right: -90, bottom: -22, height: 78, borderRadius: 999, backgroundColor: colors.background, transform: [{ rotate: '3deg' }] },
-  heroContent: { paddingHorizontal: 22, paddingBottom: 54, zIndex: 3 },
+  photoTint: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(7,60,50,0.04)' },
+  fadeTop: { position: 'absolute', left: 0, right: 0, bottom: 100, height: 64, backgroundColor: 'rgba(245,250,247,0.03)' },
+  fadeMid: { position: 'absolute', left: 0, right: 0, bottom: 46, height: 74, backgroundColor: 'rgba(245,250,247,0.28)' },
+  fadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 56, backgroundColor: colors.background },
+  waveOne: { position: 'absolute', left: -70, right: -70, bottom: 16, height: 64, borderRadius: 999, backgroundColor: 'rgba(227,242,233,0.50)', transform: [{ rotate: '-4deg' }] },
+  waveTwo: { position: 'absolute', left: -90, right: -90, bottom: -24, height: 78, borderRadius: 999, backgroundColor: colors.background, transform: [{ rotate: '3deg' }] },
+  heroContent: { paddingHorizontal: 22, paddingBottom: 52, zIndex: 3 },
   city: { height: 74, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 5, opacity: 0.82, marginTop: 4 },
   building: { width: 18, backgroundColor: colors.primary, borderTopLeftRadius: 3, borderTopRightRadius: 3 },
   leafA: { position: 'absolute', width: 48, height: 20, borderRadius: 24, backgroundColor: colors.primary, opacity: 0.09, left: 18, bottom: 10, transform: [{ rotate: '-24deg' }] },
