@@ -37,18 +37,40 @@ export default function HomeScreen() {
     <MintBackground>
       <SafeAreaView style={styles.safe}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <PhotoFadeHero height={255}>
-            <Text style={styles.brand}>NadhafaDZ</Text>
-            <Text style={styles.title}>نظافة حينا</Text>
-            <Text style={styles.heroSub}>تنبيه محلي بسيط، يساعد السكان ويدعم عمل فرق النظافة.</Text>
-            <View style={styles.locationBadge}>
-              <Ionicons name="location" size={16} color={colors.primary} />
-              <Text style={styles.locationText}>{neighborhoodLabel} • براقي</Text>
+          <View style={styles.topRow}>
+            <View>
+              <Text style={styles.hello}>مرحبًا</Text>
+              <Text style={styles.locationLine}><Ionicons name="location" size={16} color={colors.primary} /> {neighborhoodLabel}</Text>
             </View>
-          </PhotoFadeHero>
+            <View style={styles.avatar}><Ionicons name="person" size={22} color="#7A8580" /></View>
+          </View>
+
+          <View style={styles.heroCard}>
+            <PhotoFadeHero height={205}>
+              <Text style={styles.brand}>NadhafaDZ</Text>
+              <Text style={styles.heroTitle}>نظافة حيّنا</Text>
+              <Text style={styles.heroSub}>مسؤوليتنا جميعًا</Text>
+            </PhotoFadeHero>
+          </View>
+
+          <View style={styles.infoGrid}>
+            <View style={styles.infoCard}>
+              <View style={styles.infoIcon}><Ionicons name="trash-bin" size={24} color={colors.primary} /></View>
+              <Text style={styles.infoLabel}>حالة الشاحنة</Text>
+              <Text style={[styles.infoValue, latest && styles.infoValueActive]}>{latest ? 'في الخدمة' : 'لا يوجد رصد'}</Text>
+              <Text style={styles.infoMeta}>{latest ? `آخر تحديث ${relativeTime(latest.confirmed_at ?? latest.created_at)}` : 'بانتظار رصد مؤكد'}</Text>
+            </View>
+
+            <View style={styles.infoCard}>
+              <View style={styles.infoIcon}><Ionicons name="location" size={24} color={colors.primary} /></View>
+              <Text style={styles.infoLabel}>المنطقة المحددة</Text>
+              <Text style={styles.infoValue}>{neighborhoodLabel}</Text>
+              <Text style={styles.infoMeta}>براقي • الجزائر</Text>
+            </View>
+          </View>
 
           <View style={styles.selectorCard}>
-            <Text style={styles.selectorTitle}>اختر منطقتك</Text>
+            <Text style={styles.selectorTitle}>تغيير المنطقة</Text>
             <View style={styles.selectorRow}>
               {(['بن يوب', 'العميرات'] as const).map((item) => (
                 <Pressable key={item} onPress={() => setNeighborhood(item)} style={[styles.choice, neighborhood === item && styles.choiceActive]}>
@@ -58,47 +80,38 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <View style={styles.statusCard}>
-            <View style={styles.statusHead}>
-              <View style={styles.statusIcon}><Ionicons name="trash-bin-outline" size={22} color={colors.primary} /></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>حالة شاحنة النظافة</Text>
-                <Text style={styles.status}>{latest ? 'تم رصد الشاحنة' : 'لم يتم رصدها بعد'}</Text>
-              </View>
+          <Pressable style={styles.reportCta} onPress={() => router.push('/(app)/report')}>
+            <View style={styles.reportTextWrap}>
+              <Text style={styles.reportTitle}>إبلاغ عن الشاحنة</Text>
+              <Text style={styles.reportSub}>ساعد سكان {neighborhoodLabel} بمعرفة مكانها</Text>
             </View>
-            <Text style={styles.muted}>{latest ? `آخر تأكيد ${relativeTime(latest.confirmed_at ?? latest.created_at)} في ${getNeighborhoodDisplayName(latest.neighborhood)}.` : 'سيظهر آخر رصد مؤكد هنا فور توفر بيانات المرور.'}</Text>
-            {latest && (
-              <Pressable style={styles.inlineAction} onPress={() => router.push('/(app)/map')}>
-                <Text style={styles.inlineActionText}>عرضها على الخريطة</Text>
-                <Ionicons name="navigate-outline" size={17} color={colors.primary} />
-              </Pressable>
-            )}
-          </View>
-
-          <Pressable style={styles.primary} onPress={() => router.push('/(app)/report')}>
-            <View style={styles.primaryIcon}><Ionicons name="megaphone" size={27} color={colors.primary} /></View>
-            <Text style={styles.primaryTitle}>رأيت شاحنة النظافة الآن</Text>
-            <Text style={styles.primarySub}>شارك موقع الشاحنة فقط لتنبيه سكان {neighborhoodLabel}</Text>
+            <View style={styles.reportIcon}><Ionicons name="megaphone" size={27} color="#FFFFFF" /></View>
           </Pressable>
 
           <Text style={styles.sectionTitle}>خدمات سريعة</Text>
-          <View style={styles.row}>
-            <Pressable style={styles.smallCard} onPress={() => router.push('/(app)/map')}>
-              <View style={styles.cardIcon}><Ionicons name="map-outline" size={23} color={colors.primary} /></View>
-              <Text style={styles.smallTitle}>الخريطة الحية</Text>
-              <Text style={styles.muted}>موقع وآخر رصد</Text>
+          <View style={styles.servicesRow}>
+            <Pressable style={styles.serviceCard} onPress={() => router.push('/(app)/map')}>
+              <View style={styles.serviceIcon}><Ionicons name="map" size={25} color={colors.primary} /></View>
+              <Text style={styles.serviceTitle}>الخريطة الحية</Text>
+              <Text style={styles.serviceMeta}>موقع الشاحنة والرصد</Text>
             </Pressable>
-            <Pressable style={styles.smallCard} onPress={() => router.push('/(app)/notifications')}>
-              <View style={styles.cardIcon}><Ionicons name="notifications-outline" size={23} color={colors.primary} /></View>
-              <Text style={styles.smallTitle}>التنبيهات</Text>
-              <Text style={styles.muted}>مرور واقتراب الشاحنة</Text>
+            <Pressable style={styles.serviceCard} onPress={() => router.push('/(app)/notifications')}>
+              <View style={styles.serviceIcon}><Ionicons name="notifications" size={25} color={colors.primary} /></View>
+              <Text style={styles.serviceTitle}>التنبيهات</Text>
+              <Text style={styles.serviceMeta}>مرور واقتراب الشاحنة</Text>
             </Pressable>
           </View>
 
-          <View style={styles.info}>
-            <View style={styles.infoHead}><Ionicons name="people-outline" size={20} color={colors.primary} /><Text style={styles.infoTitle}>نسخة تجريبية مجتمعية</Text></View>
-            <Text style={styles.infoText}>حاليًا يعتمد التطبيق على بلاغات السكان المؤكدة. لاحقًا يمكن ربط التنبيهات مباشرة بشاحنات البلدية.</Text>
-          </View>
+          {latest && (
+            <Pressable style={styles.liveCard} onPress={() => router.push('/(app)/map')}>
+              <View style={styles.liveDot} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.liveTitle}>الشاحنة في طريقها</Text>
+                <Text style={styles.liveText}>آخر رصد مؤكد في {getNeighborhoodDisplayName(latest.neighborhood)} • اضغط لعرض الموقع</Text>
+              </View>
+              <Ionicons name="chevron-back" size={20} color={colors.primary} />
+            </Pressable>
+          )}
         </ScrollView>
       </SafeAreaView>
     </MintBackground>
@@ -107,38 +120,42 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { paddingBottom: 24, gap: 16 },
-  brand: { color: colors.primary, fontSize: 16, fontWeight: '900', textAlign: 'right' },
-  title: { fontSize: 32, fontWeight: '900', color: colors.primaryDark, textAlign: 'right', marginTop: 2 },
-  heroSub: { color: colors.primaryDark, textAlign: 'right', lineHeight: 22, marginTop: 5, maxWidth: '88%', alignSelf: 'flex-end' },
-  locationBadge: { marginTop: 10, alignSelf: 'flex-end', flexDirection: 'row-reverse', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 7, borderWidth: 1, borderColor: colors.border },
-  locationText: { color: colors.primaryDark, fontWeight: '800' },
-  selectorCard: { marginHorizontal: 18, backgroundColor: colors.card, borderRadius: radius.lg, padding: 18, borderWidth: 1, borderColor: colors.border, ...shadow },
-  selectorTitle: { textAlign: 'right', fontWeight: '900', color: colors.text, marginBottom: 12 },
-  selectorRow: { flexDirection: 'row', gap: 10 },
-  choice: { flex: 1, borderRadius: 14, paddingVertical: 12, borderWidth: 1, borderColor: '#CFE1D7', backgroundColor: '#F7FBF9' },
+  content: { paddingBottom: 28, gap: 14 },
+  topRow: { marginHorizontal: 18, marginTop: 8, flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' },
+  hello: { color: colors.text, fontSize: 16, fontWeight: '800', textAlign: 'right' },
+  locationLine: { color: colors.primary, fontSize: 16, fontWeight: '900', textAlign: 'right', marginTop: 3 },
+  avatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: '#EEF1EF' },
+  heroCard: { marginHorizontal: 18, borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border, ...shadow },
+  brand: { color: '#FFFFFF', fontSize: 17, fontWeight: '900', textAlign: 'right', textShadowColor: 'rgba(0,0,0,0.28)', textShadowRadius: 5 },
+  heroTitle: { color: '#FFFFFF', fontSize: 27, fontWeight: '900', textAlign: 'right', marginTop: 3, textShadowColor: 'rgba(0,0,0,0.32)', textShadowRadius: 6 },
+  heroSub: { color: '#F4FFF8', textAlign: 'right', fontSize: 18, fontWeight: '800', marginTop: 2, textShadowColor: 'rgba(0,0,0,0.28)', textShadowRadius: 5 },
+  infoGrid: { marginHorizontal: 18, flexDirection: 'row', gap: 10 },
+  infoCard: { flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: 15, borderWidth: 1, borderColor: colors.border, ...shadow },
+  infoIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' },
+  infoLabel: { color: colors.secondary, textAlign: 'right', marginTop: 10, fontSize: 12, fontWeight: '700' },
+  infoValue: { color: colors.text, textAlign: 'right', fontWeight: '900', fontSize: 17, marginTop: 3 },
+  infoValueActive: { color: colors.primary },
+  infoMeta: { color: colors.secondary, textAlign: 'right', fontSize: 11, marginTop: 3 },
+  selectorCard: { marginHorizontal: 18, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.border },
+  selectorTitle: { textAlign: 'right', color: colors.text, fontWeight: '900', marginBottom: 10 },
+  selectorRow: { flexDirection: 'row', gap: 9 },
+  choice: { flex: 1, minHeight: 42, borderRadius: 13, borderWidth: 1, borderColor: '#CFE1D7', backgroundColor: '#F8FBF9', alignItems: 'center', justifyContent: 'center' },
   choiceActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  choiceText: { textAlign: 'center', fontWeight: '800', color: colors.text },
-  choiceTextActive: { color: '#fff' },
-  statusCard: { marginHorizontal: 18, backgroundColor: colors.card, borderRadius: radius.lg, padding: 20, borderWidth: 1, borderColor: colors.border, ...shadow },
-  statusHead: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
-  statusIcon: { width: 42, height: 42, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.soft },
-  label: { textAlign: 'right', color: colors.secondary, fontWeight: '700' },
-  status: { textAlign: 'right', fontSize: 21, fontWeight: '900', color: colors.text, marginTop: 3 },
-  muted: { color: colors.secondary, textAlign: 'right', lineHeight: 20, marginTop: 6 },
-  inlineAction: { alignSelf: 'flex-end', flexDirection: 'row-reverse', alignItems: 'center', gap: 5, marginTop: 12 },
-  inlineActionText: { color: colors.primary, fontWeight: '900' },
-  primary: { marginHorizontal: 18, backgroundColor: colors.primary, borderRadius: 24, padding: 22, alignItems: 'center', shadowColor: colors.primaryDark, shadowOpacity: 0.16, shadowRadius: 14, shadowOffset: { width: 0, height: 7 }, elevation: 5 },
-  primaryIcon: { width: 50, height: 50, borderRadius: 20, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  primaryTitle: { color: '#fff', fontWeight: '900', fontSize: 21, textAlign: 'center' },
-  primarySub: { color: '#EAF7F0', fontSize: 12, textAlign: 'center', marginTop: 6 },
-  sectionTitle: { marginHorizontal: 18, textAlign: 'right', fontSize: 18, fontWeight: '900', color: colors.text },
-  row: { marginHorizontal: 18, flexDirection: 'row', gap: 12 },
-  smallCard: { flex: 1, backgroundColor: colors.card, padding: 18, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, ...shadow },
-  cardIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.soft, alignSelf: 'flex-end' },
-  smallTitle: { fontWeight: '900', fontSize: 16, color: colors.text, textAlign: 'right', marginTop: 9 },
-  info: { marginHorizontal: 18, backgroundColor: colors.decorative, borderRadius: radius.lg, padding: 18 },
-  infoHead: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8 },
-  infoTitle: { textAlign: 'right', fontWeight: '900', color: colors.primary },
-  infoText: { textAlign: 'right', color: colors.primaryDark, lineHeight: 22, marginTop: 7 },
+  choiceText: { color: colors.text, fontWeight: '800' },
+  choiceTextActive: { color: '#FFFFFF' },
+  reportCta: { marginHorizontal: 18, minHeight: 82, borderRadius: radius.lg, backgroundColor: colors.primary, paddingHorizontal: 18, flexDirection: 'row-reverse', alignItems: 'center', gap: 12, shadowColor: colors.primaryDark, shadowOpacity: 0.16, shadowRadius: 14, elevation: 5 },
+  reportTextWrap: { flex: 1 },
+  reportTitle: { color: '#FFFFFF', textAlign: 'right', fontSize: 20, fontWeight: '900' },
+  reportSub: { color: '#E7F6EE', textAlign: 'right', marginTop: 4, fontSize: 12 },
+  reportIcon: { width: 48, height: 48, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.13)', alignItems: 'center', justifyContent: 'center' },
+  sectionTitle: { marginHorizontal: 18, color: colors.text, fontSize: 18, fontWeight: '900', textAlign: 'right', marginTop: 2 },
+  servicesRow: { marginHorizontal: 18, flexDirection: 'row', gap: 10 },
+  serviceCard: { flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: 16, borderWidth: 1, borderColor: colors.border, ...shadow },
+  serviceIcon: { width: 43, height: 43, borderRadius: 14, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' },
+  serviceTitle: { color: colors.text, textAlign: 'right', fontWeight: '900', fontSize: 15, marginTop: 8 },
+  serviceMeta: { color: colors.secondary, textAlign: 'right', fontSize: 11, marginTop: 3 },
+  liveCard: { marginHorizontal: 18, backgroundColor: '#FFFFFF', borderRadius: radius.lg, padding: 15, borderWidth: 1, borderColor: '#CDE5D7', flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
+  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  liveTitle: { color: colors.text, textAlign: 'right', fontWeight: '900' },
+  liveText: { color: colors.secondary, textAlign: 'right', fontSize: 12, marginTop: 3, lineHeight: 18 },
 });
