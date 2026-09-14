@@ -41,3 +41,6 @@ export const shadow = {
 };
 
 export const heroImage = { uri: heroImageData };
+export const heroFallbackImage = {
+  uri: 'https://commons.wikimedia.org/wiki/Special:FilePath/Loading%20Refuse%20into%20Dustbin%20Truck.jpg?width=960',
+};
