@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -40,18 +40,22 @@ const DARK = '#073C32';
 const LIGHT = '#F5FAF7';
 const NEIGHBORHOODS = ['بن يوب', 'العميرات'] as const;
 
+const SERVICE_START: LatLng = {
+  latitude: 36.651640,
+  longitude: 3.108959,
+};
+
 function displayNeighborhood(value: string) {
   return value === 'العميرات' ? 'الحوش' : value === 'بن يوب' ? 'حي بن يوب' : value;
 }
 
-// IMPORTANT: the uploaded map reference shows that the previous diagonal green overlay was wrong.
-// Until the exact junction coordinate is confirmed from Google Maps, we intentionally do NOT draw
-// a fabricated route or polygon. Google Maps' real streets remain the source of truth on screen.
+// Confirmed by the user from Google Maps: this junction is the official start of the service area.
+// We deliberately do not draw a fabricated route or polygon; the actual Google Maps streets stay visible.
 const DEFAULT_REGION = {
-  latitude: 36.65345,
-  longitude: 3.1166,
-  latitudeDelta: 0.0085,
-  longitudeDelta: 0.0145,
+  latitude: SERVICE_START.latitude,
+  longitude: SERVICE_START.longitude,
+  latitudeDelta: 0.0075,
+  longitudeDelta: 0.012,
 };
 
 function validPoint(lat: unknown, lon: unknown) {
@@ -109,17 +113,12 @@ export default function MapScreen() {
   const [mapReady, setMapReady] = useState(false);
   const [mapType, setMapType] = useState<MapKind>('standard');
 
-  const serviceViewPoints = useMemo<LatLng[]>(() => {
-    const points = SERVICE_LANDMARKS.filter((landmark) => validPoint(landmark.latitude, landmark.longitude)).map(
+  const serviceViewPoints: LatLng[] = [
+    SERVICE_START,
+    ...SERVICE_LANDMARKS.filter((landmark) => validPoint(landmark.latitude, landmark.longitude)).map(
       (landmark) => ({ latitude: landmark.latitude, longitude: landmark.longitude }),
-    );
-    return points.length >= 2
-      ? points
-      : [
-          { latitude: 36.6526, longitude: 3.1151 },
-          { latitude: 36.6557, longitude: 3.1192 },
-        ];
-  }, []);
+    ),
+  ];
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -162,7 +161,7 @@ export default function MapScreen() {
       edgePadding: { top: 64, right: 40, bottom: 160, left: 40 },
       animated: true,
     });
-  }, [mapReady, serviceViewPoints]);
+  }, [mapReady]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -238,24 +237,15 @@ export default function MapScreen() {
             onMapReady={() => setMapReady(true)}
             mapPadding={{ top: 12, right: 8, bottom: 115, left: 8 }}
           >
-            {SERVICE_LANDMARKS.map((landmark) => (
-              <Marker
-                key={landmark.key}
-                coordinate={{ latitude: landmark.latitude, longitude: landmark.longitude }}
-                title={landmark.name}
-                description={displayNeighborhood(landmark.neighborhood)}
-                pinColor={landmark.kind === 'pharmacy' ? '#E65353' : landmark.kind === 'mosque' ? PRIMARY : '#567A8A'}
-              />
-            ))}
+            <Marker coordinate={SERVICE_START} title="بداية الطريق الرئيسي" description="بداية نطاق الخدمة" pinColor={PRIMARY} />
 
             {latest && <TruckPulseMarker coordinate={{ latitude: latest.latitude, longitude: latest.longitude }} />}
-            {items.slice(1, 4).map((item) => <Marker key={item.id} coordinate={{ latitude: item.latitude, longitude: item.longitude }} title="رصد مؤكد سابق" pinColor={PRIMARY} />)}
             {pending.map((item) => <Marker key={`pending-${item.id}`} coordinate={{ latitude: item.latitude, longitude: item.longitude }} title="رصد أولي ينتظر التأكيد" pinColor="#D98E04" />)}
           </MapView>
 
           <View style={styles.referenceChip} pointerEvents="none">
             <Ionicons name="git-branch-outline" size={14} color={PRIMARY} />
-            <Text style={styles.referenceChipText}>البداية من المفترق الرئيسي • الطرق الفعلية فقط</Text>
+            <Text style={styles.referenceChipText}>بداية النطاق مؤكدة من المفترق الرئيسي</Text>
           </View>
 
           <View style={styles.floatingActions}>
