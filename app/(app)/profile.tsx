@@ -2,7 +2,7 @@ import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNeighborhood } from '@/contexts/NeighborhoodContext';
+import { getNeighborhoodDisplayName, useNeighborhood } from '@/contexts/NeighborhoodContext';
 import { MintBackground } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
 
@@ -16,6 +16,7 @@ export default function ProfileScreen() {
   }
 
   const name = String(user?.user_metadata?.full_name ?? 'مستخدم NadhafaDZ');
+  const neighborhoodLabel = getNeighborhoodDisplayName(neighborhood);
 
   return (
     <MintBackground>
@@ -37,7 +38,7 @@ export default function ProfileScreen() {
           <View style={styles.divider} />
           <View style={styles.row}>
             <View style={styles.rowIcon}><Ionicons name="location-outline" size={20} color={colors.primary} /></View>
-            <View style={styles.rowText}><Text style={styles.label}>الحي المحدد</Text><Text style={styles.value}>حي {neighborhood}</Text></View>
+            <View style={styles.rowText}><Text style={styles.label}>المنطقة المحددة</Text><Text style={styles.value}>{neighborhoodLabel}</Text></View>
           </View>
         </View>
 
