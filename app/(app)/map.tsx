@@ -13,7 +13,6 @@ import MapView, { Marker, Polygon, Polyline, type LatLng } from 'react-native-ma
 import * as Location from 'expo-location';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { supabase } from '@/lib/supabase';
-import { useNeighborhood } from '@/contexts/NeighborhoodContext';
 
 type TruckFeedItem = {
   id: string;
@@ -33,6 +32,13 @@ type PendingReport = {
   created_at: string;
 };
 
+type ServiceAnchor = {
+  key: 'el-houch-entry' | 'hamza-mosque' | 'ben-youb-core';
+  label: string;
+  description: string;
+  coordinate: LatLng;
+};
+
 const PRIMARY = '#168A55';
 const DARK = '#17352A';
 const LIGHT = '#F5FAF7';
@@ -42,41 +48,65 @@ function displayNeighborhood(value: string) {
   return value === 'العميرات' ? 'الحوش' : value;
 }
 
-// Operational map references taken from the user-supplied Google Maps screenshots.
-// These are service-area references, not official administrative boundaries.
-const HAMZA_MOSQUE: LatLng = { latitude: 36.6529492, longitude: 3.1161007 };
-const BEN_YOUB_CENTER: LatLng = { latitude: 36.65443, longitude: 3.11800 };
-const EL_HOUCH_START: LatLng = { latitude: 36.65406, longitude: 3.10031 };
+// Canonical service anchors for the NadhafaDZ pilot map.
+// These three references define the local map frame. The corridor and polygon below are
+// visual/service geometry only and can be refined later without changing the main anchors.
+const SERVICE_ANCHORS: ServiceAnchor[] = [
+  {
+    key: 'el-houch-entry',
+    label: 'بداية الحوش',
+    description: 'جهة كونديا وبداية امتداد طريق الحوش',
+    coordinate: { latitude: 36.65406, longitude: 3.10031 },
+  },
+  {
+    key: 'hamza-mosque',
+    label: 'مسجد حمزة',
+    description: 'معلم داخل حي بن يوب عند الانتقال من امتداد الحوش',
+    coordinate: { latitude: 36.6529492, longitude: 3.1161007 },
+  },
+  {
+    key: 'ben-youb-core',
+    label: 'حي بن يوب',
+    description: 'قلب التجمع السكني وشبكة الطرق الداخلية',
+    coordinate: { latitude: 36.65443, longitude: 3.118 },
+  },
+];
 
-// El Houch is treated as a road corridor from the Koundia side toward the Ben Youb edge.
+const EL_HOUCH_START = SERVICE_ANCHORS[0].coordinate;
+const HAMZA_MOSQUE = SERVICE_ANCHORS[1].coordinate;
+const BEN_YOUB_CENTER = SERVICE_ANCHORS[2].coordinate;
+const SERVICE_VIEW_POINTS = SERVICE_ANCHORS.map((anchor) => anchor.coordinate);
+
+// El Houch is treated as a road corridor from the Koundia side toward Ben Youb.
 // Hamza mosque itself belongs to Ben Youb, so the corridor stops just before it.
 const EL_HOUCH_CORRIDOR: LatLng[] = [
   EL_HOUCH_START,
-  { latitude: 36.65372, longitude: 3.10430 },
-  { latitude: 36.65312, longitude: 3.10860 },
-  { latitude: 36.65255, longitude: 3.11260 },
+  { latitude: 36.65372, longitude: 3.1043 },
+  { latitude: 36.65312, longitude: 3.1086 },
+  { latitude: 36.65255, longitude: 3.1126 },
   { latitude: 36.65262, longitude: 3.11535 },
 ];
 
 // Dense residential block shown in the user-supplied map screenshots.
 // Includes Hamza mosque and the internal street grid of Ben Youb.
 const BEN_YOUB_POLYGON: LatLng[] = [
-  { latitude: 36.65165, longitude: 3.11240 },
-  { latitude: 36.65145, longitude: 3.12040 },
-  { latitude: 36.65630, longitude: 3.12110 },
-  { latitude: 36.65665, longitude: 3.11410 },
-  { latitude: 36.65490, longitude: 3.11230 },
+  { latitude: 36.65165, longitude: 3.1124 },
+  { latitude: 36.65145, longitude: 3.1204 },
+  { latitude: 36.6563, longitude: 3.1211 },
+  { latitude: 36.65665, longitude: 3.1141 },
+  { latitude: 36.6549, longitude: 3.1123 },
 ];
 
-const SERVICE_POINTS: LatLng[] = [
+// Geometry used only to keep camera boundaries practical around the service area.
+const SERVICE_GEOMETRY_POINTS: LatLng[] = [
+  ...SERVICE_VIEW_POINTS,
   ...EL_HOUCH_CORRIDOR,
   ...BEN_YOUB_POLYGON,
-  HAMZA_MOSQUE,
 ];
 
 const DEFAULT_REGION = {
   latitude: 36.65365,
-  longitude: 3.11130,
+  longitude: 3.1113,
   latitudeDelta: 0.0145,
   longitudeDelta: 0.025,
 };
@@ -123,7 +153,7 @@ function boundsFromPoints(points: LatLng[]) {
     maxLon = Math.max(maxLon, p.longitude);
   }
   const latPad = Math.max((maxLat - minLat) * 0.18, 0.0012);
-  const lonPad = Math.max((maxLon - minLon) * 0.10, 0.0012);
+  const lonPad = Math.max((maxLon - minLon) * 0.1, 0.0012);
   return {
     northEast: { latitude: maxLat + latPad, longitude: maxLon + lonPad },
     southWest: { latitude: minLat - latPad, longitude: minLon - lonPad },
@@ -214,15 +244,15 @@ export default function MapScreen() {
 
   const focusServiceArea = useCallback(() => {
     if (!mapReady || !mapRef.current) return;
-    mapRef.current.fitToCoordinates(SERVICE_POINTS, {
-      edgePadding: { top: 54, right: 34, bottom: 150, left: 34 },
+    mapRef.current.fitToCoordinates(SERVICE_VIEW_POINTS, {
+      edgePadding: { top: 58, right: 42, bottom: 150, left: 42 },
       animated: true,
     });
   }, [mapReady]);
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
-    const bounds = boundsFromPoints(SERVICE_POINTS);
+    const bounds = boundsFromPoints(SERVICE_GEOMETRY_POINTS);
     if (bounds) {
       const map = mapRef.current as MapView & {
         setMapBoundaries?: (northEast: LatLng, southWest: LatLng) => void;
@@ -327,9 +357,15 @@ export default function MapScreen() {
               strokeWidth={2}
             />
 
-            <Marker coordinate={EL_HOUCH_CORRIDOR[2]} title="الحوش" description="امتداد الطريق من جهة كونديا حتى بداية حي بن يوب" pinColor="#5E8D77" />
-            <Marker coordinate={HAMZA_MOSQUE} title="مسجد حمزة" description="داخل حي بن يوب" pinColor="#168A55" />
-            <Marker coordinate={BEN_YOUB_CENTER} title="حي بن يوب" description="التجمع السكني" pinColor="#168A55" />
+            {SERVICE_ANCHORS.map((anchor) => (
+              <Marker
+                key={anchor.key}
+                coordinate={anchor.coordinate}
+                title={anchor.label}
+                description={anchor.description}
+                pinColor={anchor.key === 'el-houch-entry' ? '#5E8D77' : PRIMARY}
+              />
+            ))}
 
             {latest && <TruckPulseMarker coordinate={{ latitude: latest.latitude, longitude: latest.longitude }} />}
 
