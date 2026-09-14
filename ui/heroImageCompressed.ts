@@ -1,0 +1,1 @@
+export const heroImageData = 'data:image/jpeg;base64,
