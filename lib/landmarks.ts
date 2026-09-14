@@ -7,23 +7,57 @@ export type ServiceLandmark = {
   kind: 'mosque' | 'area' | 'road' | 'pharmacy' | 'school' | 'shop' | 'workshop';
 };
 
-// Local reference points used only to describe the truck position in familiar terms.
-// They are based on the Google Maps references supplied for the pilot area and can be
-// fine-tuned later without changing the reporting model or Supabase schema.
+// Canonical pilot-corridor points confirmed by the user from Google Maps.
+// Order matters: 1 -> 6 is the operational axis followed by the garbage truck.
 export const SERVICE_LANDMARKS: ServiceLandmark[] = [
-  { key: 'candia', name: 'كونديا', latitude: 36.65195, longitude: 3.1042, neighborhood: 'العميرات', kind: 'shop' },
-  { key: 'blb-brique', name: 'Blb Brique', latitude: 36.6522, longitude: 3.1087, neighborhood: 'العميرات', kind: 'shop' },
-  { key: 'hicham-bo', name: 'Hicham bo', latitude: 36.65255, longitude: 3.1128, neighborhood: 'العميرات', kind: 'shop' },
-  { key: 'chaybi', name: 'الإخوة شايبي', latitude: 36.65245, longitude: 3.1142, neighborhood: 'العميرات', kind: 'shop' },
-  { key: 'hamza-mosque', name: 'مسجد حمزة', latitude: 36.6525756, longitude: 3.1151464, neighborhood: 'بن يوب', kind: 'mosque' },
-  { key: 'zaki-bva', name: 'Zaki BVA', latitude: 36.6538, longitude: 3.11535, neighborhood: 'بن يوب', kind: 'workshop' },
-  { key: 'oussama', name: 'Groupe Oussama mécanique', latitude: 36.65455, longitude: 3.1164, neighborhood: 'بن يوب', kind: 'workshop' },
-  { key: 'bensenouci', name: 'Pharmacie Bensenouci', latitude: 36.6527, longitude: 3.11715, neighborhood: 'بن يوب', kind: 'pharmacy' },
-  { key: 'oz-school', name: 'Oz School', latitude: 36.65295, longitude: 3.11825, neighborhood: 'بن يوب', kind: 'school' },
-  { key: 'alliliche', name: 'Alliliche', latitude: 36.65565, longitude: 3.11915, neighborhood: 'بن يوب', kind: 'area' },
-  { key: 'salem-rebhi', name: 'Salem rebhi', latitude: 36.65495, longitude: 3.12005, neighborhood: 'بن يوب', kind: 'area' },
-  { key: 'hamouda-sat', name: 'Hamouda sat', latitude: 36.65325, longitude: 3.12065, neighborhood: 'بن يوب', kind: 'shop' },
-  { key: 'ben-youb-center', name: 'وسط حي بن يوب', latitude: 36.6543, longitude: 3.1181, neighborhood: 'بن يوب', kind: 'area' },
+  {
+    key: 'route-1-start-houch',
+    name: 'بداية حي الحوش – قرب مدرسة 1 نوفمبر 1954',
+    latitude: 36.651688,
+    longitude: 3.108979,
+    neighborhood: 'العميرات',
+    kind: 'school',
+  },
+  {
+    key: 'route-2-salem-dztube',
+    name: 'Salem DZTube',
+    latitude: 36.652237,
+    longitude: 3.112296,
+    neighborhood: 'العميرات',
+    kind: 'area',
+  },
+  {
+    key: 'route-3-hamza-mosque',
+    name: 'مسجد حمزة',
+    latitude: 36.652788,
+    longitude: 3.115609,
+    neighborhood: 'بن يوب',
+    kind: 'mosque',
+  },
+  {
+    key: 'route-4-cyber-baraka',
+    name: 'سيبير البركة',
+    latitude: 36.653063,
+    longitude: 3.116484,
+    neighborhood: 'بن يوب',
+    kind: 'shop',
+  },
+  {
+    key: 'route-5-ben-youb',
+    name: 'بن يوب',
+    latitude: 36.653037,
+    longitude: 3.117797,
+    neighborhood: 'بن يوب',
+    kind: 'area',
+  },
+  {
+    key: 'route-6-end',
+    name: 'آخر نقطة تصل إليها الشاحنة',
+    latitude: 36.653179,
+    longitude: 3.118782,
+    neighborhood: 'بن يوب',
+    kind: 'road',
+  },
 ];
 
 function toRad(value: number) {
