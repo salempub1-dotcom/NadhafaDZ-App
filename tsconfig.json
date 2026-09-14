@@ -6,5 +6,6 @@
     "ignoreDeprecations": "6.0",
     "paths": { "@/*": ["./*"] }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": ["app/**/*.ts", "app/**/*.tsx", "contexts/**/*.ts", "contexts/**/*.tsx", "lib/**/*.ts", "lib/**/*.tsx", "ui/**/*.ts", "ui/**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["supabase/functions/**"]
 }
