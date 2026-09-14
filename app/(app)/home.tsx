@@ -4,6 +4,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
 import { getNeighborhoodDisplayName, useNeighborhood } from '@/contexts/NeighborhoodContext';
 import { supabase } from '@/lib/supabase';
+import { proximityLabel } from '@/lib/landmarks';
 import { MintBackground, PhotoFadeHero } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
 
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const { neighborhood, setNeighborhood } = useNeighborhood();
   const [latest, setLatest] = useState<LatestTruck | null>(null);
   const neighborhoodLabel = getNeighborhoodDisplayName(neighborhood);
+  const latestPlace = latest ? proximityLabel(latest.latitude, latest.longitude) : null;
 
   useEffect(() => {
     let active = true;
@@ -55,7 +57,7 @@ export default function HomeScreen() {
 
           <View style={styles.infoGrid}>
             <View style={styles.infoCard}>
-              <View style={styles.infoIcon}><Ionicons name="trash-bin" size={24} color={colors.primary} /></View>
+              <View style={styles.infoIcon}><Text style={styles.truckMini}>🚛</Text></View>
               <Text style={styles.infoLabel}>حالة الشاحنة</Text>
               <Text style={[styles.infoValue, latest && styles.infoValueActive]}>{latest ? 'في الخدمة' : 'لا يوجد رصد'}</Text>
               <Text style={styles.infoMeta}>{latest ? `آخر تحديث ${relativeTime(latest.confirmed_at ?? latest.created_at)}` : 'بانتظار رصد مؤكد'}</Text>
@@ -106,8 +108,8 @@ export default function HomeScreen() {
             <Pressable style={styles.liveCard} onPress={() => router.push('/(app)/map')}>
               <View style={styles.liveDot} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.liveTitle}>الشاحنة في طريقها</Text>
-                <Text style={styles.liveText}>آخر رصد مؤكد في {getNeighborhoodDisplayName(latest.neighborhood)} • اضغط لعرض الموقع</Text>
+                <Text style={styles.liveTitle}>🚛 الشاحنة قريبة</Text>
+                <Text style={styles.liveText}>{latestPlace ?? `آخر رصد مؤكد في ${getNeighborhoodDisplayName(latest.neighborhood)}`} • اضغط لعرض الموقع</Text>
               </View>
               <Ionicons name="chevron-back" size={20} color={colors.primary} />
             </Pressable>
@@ -132,6 +134,7 @@ const styles = StyleSheet.create({
   infoGrid: { marginHorizontal: 18, flexDirection: 'row', gap: 10 },
   infoCard: { flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: 15, borderWidth: 1, borderColor: colors.border, ...shadow },
   infoIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' },
+  truckMini: { fontSize: 23 },
   infoLabel: { color: colors.secondary, textAlign: 'right', marginTop: 10, fontSize: 12, fontWeight: '700' },
   infoValue: { color: colors.text, textAlign: 'right', fontWeight: '900', fontSize: 17, marginTop: 3 },
   infoValueActive: { color: colors.primary },
