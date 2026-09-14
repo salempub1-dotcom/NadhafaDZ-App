@@ -12,13 +12,22 @@ type Landmark = {
 };
 
 const LANDMARKS: Landmark[] = [
-  { name: 'بداية الحوش', latitude: 36.65406, longitude: 3.10031, neighborhood: 'العميرات' },
-  { name: 'مسجد حمزة', latitude: 36.6529492, longitude: 3.1161007, neighborhood: 'بن يوب' },
-  { name: 'وسط حي بن يوب', latitude: 36.65443, longitude: 3.118, neighborhood: 'بن يوب' },
+  { name: 'كونديا', latitude: 36.65195, longitude: 3.1042, neighborhood: 'العميرات' },
+  { name: 'Blb Brique', latitude: 36.6522, longitude: 3.1087, neighborhood: 'العميرات' },
+  { name: 'Hicham bo', latitude: 36.65255, longitude: 3.1128, neighborhood: 'العميرات' },
+  { name: 'الإخوة شايبي', latitude: 36.65245, longitude: 3.1142, neighborhood: 'العميرات' },
+  { name: 'مسجد حمزة', latitude: 36.6525756, longitude: 3.1151464, neighborhood: 'بن يوب' },
+  { name: 'Zaki BVA', latitude: 36.6538, longitude: 3.11535, neighborhood: 'بن يوب' },
+  { name: 'Groupe Oussama mécanique', latitude: 36.65455, longitude: 3.1164, neighborhood: 'بن يوب' },
+  { name: 'Pharmacie Bensenouci', latitude: 36.6527, longitude: 3.11715, neighborhood: 'بن يوب' },
+  { name: 'Oz School', latitude: 36.65295, longitude: 3.11825, neighborhood: 'بن يوب' },
+  { name: 'Alliliche', latitude: 36.65565, longitude: 3.11915, neighborhood: 'بن يوب' },
+  { name: 'Salem rebhi', latitude: 36.65495, longitude: 3.12005, neighborhood: 'بن يوب' },
+  { name: 'Hamouda sat', latitude: 36.65325, longitude: 3.12065, neighborhood: 'بن يوب' },
 ];
 
 function displayNeighborhood(value: string) {
-  return value === 'العميرات' ? 'الحوش' : `حي ${value}`;
+  return value === 'العميرات' ? 'الحوش' : 'حي بن يوب';
 }
 
 function toRad(value: number) {
@@ -37,24 +46,20 @@ function distanceMeters(a: { latitude: number; longitude: number }, b: { latitud
 
 function proximityText(latitude: number, longitude: number, neighborhood: string) {
   const point = { latitude, longitude };
-  const nearest = LANDMARKS
-    .filter((landmark) => landmark.neighborhood === neighborhood)
+  const candidates = LANDMARKS.filter((landmark) => landmark.neighborhood === neighborhood);
+  const nearest = candidates
     .map((landmark) => ({ landmark, distance: distanceMeters(point, landmark) }))
     .sort((a, b) => a.distance - b.distance)[0];
 
   if (!nearest) return `في ${displayNeighborhood(neighborhood)}`;
-  const meters = Math.max(10, Math.round(nearest.distance / 10) * 10);
-
-  if (nearest.distance <= 70) return `عند ${nearest.landmark.name}`;
-  if (nearest.distance <= 250) return `بالقرب من ${nearest.landmark.name}، على بعد نحو ${meters} متر`;
-  if (neighborhood === 'العميرات') return 'على امتداد الطريق الرئيسي في الحوش';
-  return 'داخل حي بن يوب، بالقرب من الطريق الرئيسي';
+  const meters = Math.max(25, Math.round(nearest.distance / 50) * 50);
+  if (nearest.distance <= 60) return `عند ${nearest.landmark.name}`;
+  if (nearest.distance <= 300) return `بالقرب من ${nearest.landmark.name}، على بعد نحو ${meters} متر`;
+  return neighborhood === 'العميرات' ? 'على الطريق الرئيسي في الحوش' : 'داخل حي بن يوب، قرب الطريق الرئيسي';
 }
 
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 });
-  }
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
   try {
     const authHeader = req.headers.get('Authorization');
@@ -105,7 +110,7 @@ Deno.serve(async (req) => {
       to: token,
       sound: 'default',
       title: '🚛 الشاحنة قريبة',
-      body: `تم تأكيد شاحنة النظافة ${nearText}. افتح الخريطة لرؤية آخر موقع مؤكد.`,
+      body: `تم تأكيد شاحنة النظافة ${nearText}. افتح الخريطة لرؤية الموقع.`,
       data: {
         type: 'truck_confirmed',
         report_id: report.id,
