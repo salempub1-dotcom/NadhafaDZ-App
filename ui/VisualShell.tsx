@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react';
 import { ImageBackground, type ImageSourcePropType, StyleSheet, View } from 'react-native';
-import { colors, welcomeHeroImage } from '@/ui/theme';
+import { authHeroImage, colors, homeHeroImage, welcomeHeroImage } from '@/ui/theme';
 
 export function MintBackground({ children }: PropsWithChildren) {
   return (
@@ -15,12 +15,14 @@ export function MintBackground({ children }: PropsWithChildren) {
 
 export function PhotoFadeHero({
   height = 260,
-  imageSource = welcomeHeroImage,
+  imageSource,
   children,
 }: PropsWithChildren<{ height?: number; imageSource?: ImageSourcePropType }>) {
+  const resolvedSource = imageSource ?? (height <= 210 ? homeHeroImage : height <= 230 ? authHeroImage : welcomeHeroImage);
+
   return (
     <View style={[styles.heroWrap, { height }]}>
-      <ImageBackground source={imageSource} style={styles.hero} resizeMode="cover">
+      <ImageBackground source={resolvedSource} style={styles.hero} resizeMode="cover">
         <View style={styles.photoTint} />
         <View style={styles.fadeTop} />
         <View style={styles.fadeMid} />
