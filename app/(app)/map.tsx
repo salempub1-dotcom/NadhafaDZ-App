@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import MapView, { Marker, Polygon, Polyline, type LatLng } from 'react-native-maps';
+import MapView, { Marker, type LatLng } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { supabase } from '@/lib/supabase';
@@ -35,8 +35,8 @@ type PendingReport = {
 
 type MapKind = 'standard' | 'satellite' | 'hybrid';
 
-const PRIMARY = '#168A55';
-const DARK = '#17352A';
+const PRIMARY = '#008B4C';
+const DARK = '#073C32';
 const LIGHT = '#F5FAF7';
 const NEIGHBORHOODS = ['بن يوب', 'العميرات'] as const;
 
@@ -44,42 +44,14 @@ function displayNeighborhood(value: string) {
   return value === 'العميرات' ? 'الحوش' : value === 'بن يوب' ? 'حي بن يوب' : value;
 }
 
-// The pilot follows the real main road from the Candia / El Houch side into Ben Youb.
-// Hamza mosque belongs to Ben Youb and is kept as a key reference point inside the block.
-const MAIN_ROAD: LatLng[] = [
-  { latitude: 36.65195, longitude: 3.1042 },
-  { latitude: 36.65208, longitude: 3.1072 },
-  { latitude: 36.6522, longitude: 3.1087 },
-  { latitude: 36.65238, longitude: 3.1112 },
-  { latitude: 36.65255, longitude: 3.1128 },
-  { latitude: 36.65245, longitude: 3.1142 },
-  { latitude: 36.6525756, longitude: 3.1151464 },
-  { latitude: 36.65268, longitude: 3.11715 },
-  { latitude: 36.65282, longitude: 3.1195 },
-  { latitude: 36.653, longitude: 3.1211 },
-];
-
-const BEN_YOUB_POLYGON: LatLng[] = [
-  { latitude: 36.65235, longitude: 3.1144 },
-  { latitude: 36.65225, longitude: 3.1210 },
-  { latitude: 36.6560, longitude: 3.1211 },
-  { latitude: 36.6562, longitude: 3.1170 },
-  { latitude: 36.6553, longitude: 3.1149 },
-  { latitude: 36.6535, longitude: 3.1143 },
-];
-
-const SERVICE_VIEW_POINTS: LatLng[] = [
-  MAIN_ROAD[0],
-  MAIN_ROAD[MAIN_ROAD.length - 1],
-  { latitude: 36.6560, longitude: 3.1192 },
-  { latitude: 36.6523, longitude: 3.1144 },
-];
-
+// IMPORTANT: the uploaded map reference shows that the previous diagonal green overlay was wrong.
+// Until the exact junction coordinate is confirmed from Google Maps, we intentionally do NOT draw
+// a fabricated route or polygon. Google Maps' real streets remain the source of truth on screen.
 const DEFAULT_REGION = {
   latitude: 36.65345,
-  longitude: 3.1129,
-  latitudeDelta: 0.0095,
-  longitudeDelta: 0.021,
+  longitude: 3.1166,
+  latitudeDelta: 0.0085,
+  longitudeDelta: 0.0145,
 };
 
 function validPoint(lat: unknown, lon: unknown) {
@@ -109,14 +81,19 @@ function TruckPulseMarker({ coordinate }: { coordinate: LatLng }) {
     return () => animation.stop();
   }, [pulse]);
 
-  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.85, 2.15] });
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.85, 2.2] });
   const opacity = pulse.interpolate({ inputRange: [0, 0.65, 1], outputRange: [0.5, 0.2, 0] });
 
   return (
     <Marker coordinate={coordinate} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges>
       <View style={styles.truckMarkerWrap}>
         <Animated.View style={[styles.pulseRing, { opacity, transform: [{ scale }] }]} />
-        <View style={styles.truckMarkerCore}><Text style={styles.truckEmoji}>🚛</Text></View>
+        <View style={styles.truckMarkerCore}>
+          <Ionicons name="car" size={24} color={PRIMARY} />
+          <View style={styles.trashBadge}>
+            <Ionicons name="trash-bin" size={10} color="#FFFFFF" />
+          </View>
+        </View>
       </View>
     </Marker>
   );
@@ -130,7 +107,19 @@ export default function MapScreen() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [mapType, setMapType] = useState<MapKind>('hybrid');
+  const [mapType, setMapType] = useState<MapKind>('standard');
+
+  const serviceViewPoints = useMemo<LatLng[]>(() => {
+    const points = SERVICE_LANDMARKS.filter((landmark) => validPoint(landmark.latitude, landmark.longitude)).map(
+      (landmark) => ({ latitude: landmark.latitude, longitude: landmark.longitude }),
+    );
+    return points.length >= 2
+      ? points
+      : [
+          { latitude: 36.6526, longitude: 3.1151 },
+          { latitude: 36.6557, longitude: 3.1192 },
+        ];
+  }, []);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -169,11 +158,11 @@ export default function MapScreen() {
 
   const focusServiceArea = useCallback(() => {
     if (!mapReady || !mapRef.current) return;
-    mapRef.current.fitToCoordinates(SERVICE_VIEW_POINTS, {
-      edgePadding: { top: 55, right: 35, bottom: 150, left: 35 },
+    mapRef.current.fitToCoordinates(serviceViewPoints, {
+      edgePadding: { top: 64, right: 40, bottom: 160, left: 40 },
       animated: true,
     });
-  }, [mapReady]);
+  }, [mapReady, serviceViewPoints]);
 
   useEffect(() => {
     if (!mapReady) return;
@@ -187,7 +176,7 @@ export default function MapScreen() {
   }, [latest, mapReady]);
 
   const cycleMapType = () => {
-    setMapType((current) => current === 'hybrid' ? 'standard' : current === 'standard' ? 'satellite' : 'hybrid');
+    setMapType((current) => current === 'standard' ? 'hybrid' : current === 'hybrid' ? 'satellite' : 'standard');
   };
 
   async function confirmSighting(report: PendingReport) {
@@ -221,7 +210,7 @@ export default function MapScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>الخريطة الحية</Text>
-          <Text style={styles.sub}>الحوش • الطريق الرئيسي • حي بن يوب</Text>
+          <Text style={styles.sub}>المفترق الرئيسي • الحوش • حي بن يوب</Text>
         </View>
         <Pressable style={styles.refresh} onPress={loadFeed} disabled={loading}>
           <Ionicons name="refresh" size={18} color={PRIMARY} />
@@ -239,7 +228,7 @@ export default function MapScreen() {
             ref={mapRef}
             style={StyleSheet.absoluteFill}
             initialRegion={DEFAULT_REGION}
-            minZoomLevel={15.2}
+            minZoomLevel={15.5}
             maxZoomLevel={20}
             mapType={mapType}
             showsBuildings
@@ -249,17 +238,13 @@ export default function MapScreen() {
             onMapReady={() => setMapReady(true)}
             mapPadding={{ top: 12, right: 8, bottom: 115, left: 8 }}
           >
-            <Polyline coordinates={MAIN_ROAD} strokeColor="rgba(22,138,85,0.72)" strokeWidth={8} />
-            <Polyline coordinates={MAIN_ROAD} strokeColor="rgba(255,255,255,0.78)" strokeWidth={2} lineDashPattern={[8, 8]} />
-            <Polygon coordinates={BEN_YOUB_POLYGON} strokeColor="rgba(22,138,85,0.7)" fillColor="rgba(22,138,85,0.045)" strokeWidth={2} />
-
             {SERVICE_LANDMARKS.map((landmark) => (
               <Marker
                 key={landmark.key}
                 coordinate={{ latitude: landmark.latitude, longitude: landmark.longitude }}
                 title={landmark.name}
                 description={displayNeighborhood(landmark.neighborhood)}
-                pinColor={landmark.kind === 'pharmacy' ? '#E65353' : landmark.kind === 'mosque' ? '#168A55' : '#567A8A'}
+                pinColor={landmark.kind === 'pharmacy' ? '#E65353' : landmark.kind === 'mosque' ? PRIMARY : '#567A8A'}
               />
             ))}
 
@@ -267,6 +252,11 @@ export default function MapScreen() {
             {items.slice(1, 4).map((item) => <Marker key={item.id} coordinate={{ latitude: item.latitude, longitude: item.longitude }} title="رصد مؤكد سابق" pinColor={PRIMARY} />)}
             {pending.map((item) => <Marker key={`pending-${item.id}`} coordinate={{ latitude: item.latitude, longitude: item.longitude }} title="رصد أولي ينتظر التأكيد" pinColor="#D98E04" />)}
           </MapView>
+
+          <View style={styles.referenceChip} pointerEvents="none">
+            <Ionicons name="git-branch-outline" size={14} color={PRIMARY} />
+            <Text style={styles.referenceChipText}>البداية من المفترق الرئيسي • الطرق الفعلية فقط</Text>
+          </View>
 
           <View style={styles.floatingActions}>
             <Pressable style={styles.floatingButton} onPress={focusServiceArea}><Ionicons name="map" size={19} color={PRIMARY} /><Text style={styles.floatingText}>الحي</Text></Pressable>
@@ -287,7 +277,7 @@ export default function MapScreen() {
           {latest && (
             <View style={styles.liveCard}>
               <View style={styles.liveTopRow}>
-                <View style={styles.liveIcon}><Text style={styles.liveTruckEmoji}>🚛</Text></View>
+                <View style={styles.liveIcon}><Ionicons name="car" size={22} color={PRIMARY} /></View>
                 <View style={styles.liveTextWrap}>
                   <Text style={styles.liveTitle}>شاحنة النظافة قريبة</Text>
                   <Text style={styles.liveNeighborhood}>{latestPlace ?? displayNeighborhood(latest.neighborhood)}</Text>
@@ -301,7 +291,7 @@ export default function MapScreen() {
             </View>
           )}
 
-          {!latest && !pendingLatest && <View style={styles.emptyCard}><Text style={styles.emptyTitle}>لا يوجد رصد مؤكد حاليًا</Text><Text style={styles.emptyText}>عند تأكيد مرور الشاحنة سيظهر موقعها المتوهج على الطريق أو قرب أقرب معلم معروف.</Text></View>}
+          {!latest && !pendingLatest && <View style={styles.emptyCard}><Text style={styles.emptyTitle}>لا يوجد رصد مؤكد حاليًا</Text><Text style={styles.emptyText}>عند تأكيد مرور الشاحنة سيظهر موقعها المتوهج فوق الطريق الفعلي أو قرب أقرب معلم معروف.</Text></View>}
         </View>
       )}
     </SafeAreaView>
@@ -312,35 +302,36 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: LIGHT },
   header: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 10, flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', backgroundColor: LIGHT },
   title: { fontSize: 27, fontWeight: '900', color: DARK, textAlign: 'right' },
-  sub: { textAlign: 'right', color: '#6B7A73', marginTop: 4, fontSize: 12 },
-  refresh: { backgroundColor: '#EAF7F0', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
+  sub: { textAlign: 'right', color: '#6B7280', marginTop: 4, fontSize: 12 },
+  refresh: { backgroundColor: '#E3F2E9', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, flexDirection: 'row-reverse', alignItems: 'center', gap: 6 },
   refreshText: { color: PRIMARY, fontWeight: '900' },
   mapShell: { flex: 1, position: 'relative', overflow: 'hidden' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 12 },
-  muted: { color: '#6B7A73', textAlign: 'center', lineHeight: 22 },
+  muted: { color: '#6B7280', textAlign: 'center', lineHeight: 22 },
   errorTitle: { fontSize: 20, fontWeight: '900', color: '#9B2C2C', textAlign: 'center' },
   retry: { backgroundColor: PRIMARY, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 12, marginTop: 6 },
   retryText: { color: '#fff', fontWeight: '900' },
-  floatingActions: { position: 'absolute', top: 14, left: 12, gap: 8 },
-  floatingButton: { minWidth: 80, height: 42, paddingHorizontal: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.97)', flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: '#DCE7E1', elevation: 4 },
+  referenceChip: { position: 'absolute', top: 14, right: 12, maxWidth: 230, minHeight: 38, paddingHorizontal: 11, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 1, borderColor: '#DCE8E1', flexDirection: 'row-reverse', alignItems: 'center', gap: 6, elevation: 3 },
+  referenceChipText: { color: DARK, fontWeight: '800', fontSize: 11, textAlign: 'right', flexShrink: 1 },
+  floatingActions: { position: 'absolute', top: 60, left: 12, gap: 8 },
+  floatingButton: { minWidth: 80, height: 42, paddingHorizontal: 12, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.97)', flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: '#DCE8E1', elevation: 4 },
   floatingButtonPrimary: { backgroundColor: PRIMARY, borderColor: PRIMARY },
   floatingText: { color: PRIMARY, fontWeight: '900', fontSize: 12 },
   floatingTextPrimary: { color: '#fff', fontWeight: '900', fontSize: 12 },
-  truckMarkerWrap: { width: 72, height: 72, alignItems: 'center', justifyContent: 'center' },
-  pulseRing: { position: 'absolute', width: 50, height: 50, borderRadius: 25, backgroundColor: 'rgba(22,138,85,0.28)', borderWidth: 1, borderColor: 'rgba(22,138,85,0.5)' },
-  truckMarkerCore: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: PRIMARY, elevation: 7, shadowColor: PRIMARY, shadowOpacity: 0.35, shadowRadius: 9 },
-  truckEmoji: { fontSize: 28 },
-  liveCard: { position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#DCE7E1', elevation: 8 },
+  truckMarkerWrap: { width: 76, height: 76, alignItems: 'center', justifyContent: 'center' },
+  pulseRing: { position: 'absolute', width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(0,139,76,0.25)', borderWidth: 1, borderColor: 'rgba(0,139,76,0.48)' },
+  truckMarkerCore: { width: 52, height: 52, borderRadius: 26, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: PRIMARY, elevation: 8, shadowColor: PRIMARY, shadowOpacity: 0.35, shadowRadius: 9 },
+  trashBadge: { position: 'absolute', right: -2, bottom: -1, width: 20, height: 20, borderRadius: 10, backgroundColor: PRIMARY, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
+  liveCard: { position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#DCE8E1', elevation: 8 },
   liveTopRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
-  liveIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#EAF7F0', alignItems: 'center', justifyContent: 'center' },
-  liveTruckEmoji: { fontSize: 22 },
+  liveIcon: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#E3F2E9', alignItems: 'center', justifyContent: 'center' },
   liveTextWrap: { flex: 1 },
   liveTitle: { textAlign: 'right', fontSize: 16, fontWeight: '900', color: DARK },
   liveNeighborhood: { textAlign: 'right', color: '#45665A', marginTop: 3, lineHeight: 19 },
-  confirmedBadge: { backgroundColor: '#EAF7F0', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 6 },
+  confirmedBadge: { backgroundColor: '#E3F2E9', borderRadius: 12, paddingHorizontal: 9, paddingVertical: 6 },
   confirmedBadgeText: { color: PRIMARY, fontWeight: '900', fontSize: 11 },
   liveBottomRow: { flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
-  liveTime: { color: '#6B7A73', fontSize: 12 },
+  liveTime: { color: '#6B7280', fontSize: 12 },
   showTruckButton: { backgroundColor: PRIMARY, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9, flexDirection: 'row-reverse', alignItems: 'center', gap: 5 },
   showTruckText: { color: '#fff', fontWeight: '900', fontSize: 12 },
   pendingCard: { position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: '#FFF9EA', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#F0D89A', elevation: 6 },
@@ -348,7 +339,7 @@ const styles = StyleSheet.create({
   pendingTitle: { textAlign: 'right', fontWeight: '900', fontSize: 16, color: '#6E4D00', marginTop: 5 },
   confirmButton: { backgroundColor: '#D98E04', borderRadius: 12, padding: 12, marginTop: 10 },
   confirmButtonText: { color: '#fff', fontWeight: '900', textAlign: 'center' },
-  emptyCard: { position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 18, padding: 14, borderWidth: 1, borderColor: '#DCE7E1' },
+  emptyCard: { position: 'absolute', left: 12, right: 12, bottom: 12, backgroundColor: 'rgba(255,255,255,0.96)', borderRadius: 18, padding: 14, borderWidth: 1, borderColor: '#DCE8E1' },
   emptyTitle: { textAlign: 'right', fontWeight: '900', fontSize: 16, color: DARK },
-  emptyText: { textAlign: 'right', color: '#6B7A73', lineHeight: 20, marginTop: 4 },
+  emptyText: { textAlign: 'right', color: '#6B7280', lineHeight: 20, marginTop: 4 },
 });
