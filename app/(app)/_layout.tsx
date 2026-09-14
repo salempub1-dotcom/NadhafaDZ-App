@@ -3,6 +3,7 @@ import { ActivityIndicator, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { colors } from '@/ui/theme';
 
 const iconMap: Record<string, { active: string; inactive: string }> = {
   home: { active: 'home', inactive: 'home-outline' },
@@ -19,29 +20,29 @@ export default function AppLayout() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color="#168A55" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
-  if (!session) return <Redirect href="/(auth)/login" />;
+  if (!session) return <Redirect href="/" />;
 
   return (
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#168A55',
-        tabBarInactiveTintColor: '#8A9690',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: '#88948E',
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 62 + bottomInset,
+          height: 64 + bottomInset,
           paddingTop: 7,
           paddingBottom: bottomInset,
           borderTopWidth: 1,
-          borderTopColor: '#E3ECE7',
-          backgroundColor: '#FFFFFF',
-          elevation: 12,
-          shadowColor: '#17352A',
+          borderTopColor: colors.border,
+          backgroundColor: 'rgba(255,255,255,0.98)',
+          elevation: 14,
+          shadowColor: colors.primaryDark,
           shadowOpacity: 0.08,
           shadowRadius: 14,
           shadowOffset: { width: 0, height: -4 },
@@ -52,12 +53,12 @@ export default function AppLayout() {
           return (
             <View
               style={{
-                width: 40,
-                height: 30,
-                borderRadius: 15,
+                width: 42,
+                height: 31,
+                borderRadius: 16,
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: focused ? '#E8F6EF' : 'transparent',
+                backgroundColor: focused ? colors.decorative : 'transparent',
               }}
             >
               <Ionicons name={focused ? pair.active : pair.inactive} size={22} color={color} />
