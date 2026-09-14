@@ -231,7 +231,7 @@ export default function MapScreen() {
             maxZoomLevel={20}
             mapType={mapType}
             showsBuildings
-            showsPointsOfInterest
+            showsPointsOfInterests
             showsTraffic={false}
             toolbarEnabled={false}
             onMapReady={() => setMapReady(true)}
