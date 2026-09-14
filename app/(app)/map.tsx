@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -9,7 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import MapView, { Marker, Polygon, type LatLng } from 'react-native-maps';
+import MapView, { Marker, Polygon, Polyline, type LatLng } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { supabase } from '@/lib/supabase';
@@ -33,36 +33,53 @@ type PendingReport = {
   created_at: string;
 };
 
-type LocalAnchor = LatLng & { key: string; label: string };
-
 const PRIMARY = '#168A55';
 const DARK = '#17352A';
 const LIGHT = '#F5FAF7';
 const NEIGHBORHOODS = ['بن يوب', 'العميرات'] as const;
 
-const BEN_YOUB_ANCHOR: LocalAnchor = {
-  key: 'ben-youb',
-  label: 'حي بن يوب',
-  latitude: 36.6541875,
-  longitude: 3.1170625,
-};
+function displayNeighborhood(value: string) {
+  return value === 'العميرات' ? 'الحوش' : value;
+}
 
-const FALLBACK_SERVICE_POINTS: LocalAnchor[] = [
-  { key: 'west-fallback', label: 'براقي - غرب نطاق الخدمة', latitude: 36.6540625, longitude: 3.1003125 },
-  { key: 'north-fallback', label: 'براقي - شمال نطاق الخدمة', latitude: 36.6699375, longitude: 3.1050625 },
-  BEN_YOUB_ANCHOR,
+// Operational map references taken from the user-supplied Google Maps screenshots.
+// These are service-area references, not official administrative boundaries.
+const HAMZA_MOSQUE: LatLng = { latitude: 36.6529492, longitude: 3.1161007 };
+const BEN_YOUB_CENTER: LatLng = { latitude: 36.65443, longitude: 3.11800 };
+const EL_HOUCH_START: LatLng = { latitude: 36.65406, longitude: 3.10031 };
+
+// El Houch is treated as a road corridor from the Koundia side toward the Ben Youb edge.
+// Hamza mosque itself belongs to Ben Youb, so the corridor stops just before it.
+const EL_HOUCH_CORRIDOR: LatLng[] = [
+  EL_HOUCH_START,
+  { latitude: 36.65372, longitude: 3.10430 },
+  { latitude: 36.65312, longitude: 3.10860 },
+  { latitude: 36.65255, longitude: 3.11260 },
+  { latitude: 36.65262, longitude: 3.11535 },
+];
+
+// Dense residential block shown in the user-supplied map screenshots.
+// Includes Hamza mosque and the internal street grid of Ben Youb.
+const BEN_YOUB_POLYGON: LatLng[] = [
+  { latitude: 36.65165, longitude: 3.11240 },
+  { latitude: 36.65145, longitude: 3.12040 },
+  { latitude: 36.65630, longitude: 3.12110 },
+  { latitude: 36.65665, longitude: 3.11410 },
+  { latitude: 36.65490, longitude: 3.11230 },
+];
+
+const SERVICE_POINTS: LatLng[] = [
+  ...EL_HOUCH_CORRIDOR,
+  ...BEN_YOUB_POLYGON,
+  HAMZA_MOSQUE,
 ];
 
 const DEFAULT_REGION = {
-  latitude: 36.6618,
-  longitude: 3.109,
-  latitudeDelta: 0.023,
-  longitudeDelta: 0.023,
+  latitude: 36.65365,
+  longitude: 3.11130,
+  latitudeDelta: 0.0145,
+  longitudeDelta: 0.025,
 };
-
-// Google Maps credentials are embedded in the installed Android binary by app.config.js.
-// OTA updates do not need (and may not receive) the build-time environment variable.
-const hasGoogleMapsKey = true;
 
 function validPoint(lat: unknown, lon: unknown) {
   return (
@@ -77,18 +94,6 @@ function validPoint(lat: unknown, lon: unknown) {
   );
 }
 
-function distanceKm(a: LatLng, b: LatLng) {
-  const toRad = (v: number) => (v * Math.PI) / 180;
-  const dLat = toRad(b.latitude - a.latitude);
-  const dLon = toRad(b.longitude - a.longitude);
-  const lat1 = toRad(a.latitude);
-  const lat2 = toRad(b.latitude);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
-
 function ageMinutes(date: string | null | undefined) {
   if (!date) return null;
   const value = new Date(date).getTime();
@@ -98,8 +103,7 @@ function ageMinutes(date: string | null | undefined) {
 
 function relativeAge(date: string | null | undefined) {
   const minutes = ageMinutes(date);
-  if (minutes === null) return 'الآن';
-  if (minutes < 1) return 'الآن';
+  if (minutes === null || minutes < 1) return 'الآن';
   if (minutes === 1) return 'منذ دقيقة';
   if (minutes < 60) return `منذ ${minutes} دقيقة`;
   const hours = Math.floor(minutes / 60);
@@ -118,37 +122,12 @@ function boundsFromPoints(points: LatLng[]) {
     minLon = Math.min(minLon, p.longitude);
     maxLon = Math.max(maxLon, p.longitude);
   }
-  const latPad = Math.max((maxLat - minLat) * 0.18, 0.0018);
-  const lonPad = Math.max((maxLon - minLon) * 0.18, 0.0018);
+  const latPad = Math.max((maxLat - minLat) * 0.18, 0.0012);
+  const lonPad = Math.max((maxLon - minLon) * 0.10, 0.0012);
   return {
     northEast: { latitude: maxLat + latPad, longitude: maxLon + lonPad },
     southWest: { latitude: minLat - latPad, longitude: minLon - lonPad },
   };
-}
-
-function servicePolygon(points: LatLng[]) {
-  const bounds = boundsFromPoints(points);
-  if (!bounds) return [];
-  const { northEast, southWest } = bounds;
-  return [
-    { latitude: southWest.latitude, longitude: southWest.longitude },
-    { latitude: northEast.latitude, longitude: southWest.longitude },
-    { latitude: northEast.latitude, longitude: northEast.longitude },
-    { latitude: southWest.latitude, longitude: northEast.longitude },
-  ];
-}
-
-async function geocodeFirstNearby(query: string, key: string, label: string): Promise<LocalAnchor | null> {
-  try {
-    const results = await Location.geocodeAsync(query);
-    const nearby = results.find(
-      (item) => validPoint(item.latitude, item.longitude) && distanceKm(BEN_YOUB_ANCHOR, item) <= 6,
-    );
-    if (!nearby) return null;
-    return { key, label, latitude: nearby.latitude, longitude: nearby.longitude };
-  } catch {
-    return null;
-  }
 }
 
 function TruckPulseMarker({ coordinate }: { coordinate: LatLng }) {
@@ -182,7 +161,6 @@ function TruckPulseMarker({ coordinate }: { coordinate: LatLng }) {
 }
 
 export default function MapScreen() {
-  const { neighborhood } = useNeighborhood();
   const mapRef = useRef<MapView | null>(null);
   const [items, setItems] = useState<TruckFeedItem[]>([]);
   const [pending, setPending] = useState<PendingReport[]>([]);
@@ -190,7 +168,6 @@ export default function MapScreen() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [anchors, setAnchors] = useState<LocalAnchor[]>([BEN_YOUB_ANCHOR]);
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -202,7 +179,7 @@ export default function MapScreen() {
           supabase.rpc('recent_truck_feed', { target_neighborhood: target }),
           supabase.rpc('recent_pending_truck_reports', { target_neighborhood: target }),
         ]);
-        return { target, confirmedResult, pendingResult };
+        return { confirmedResult, pendingResult };
       }),
     );
 
@@ -212,19 +189,10 @@ export default function MapScreen() {
 
     for (const result of results) {
       if (result.confirmedResult.error) errors.push(result.confirmedResult.error.message);
-      else {
-        confirmed.push(
-          ...((result.confirmedResult.data ?? []) as TruckFeedItem[]).filter((x) =>
-            validPoint(x.latitude, x.longitude),
-          ),
-        );
-      }
+      else confirmed.push(...((result.confirmedResult.data ?? []) as TruckFeedItem[]).filter((x) => validPoint(x.latitude, x.longitude)));
+
       if (!result.pendingResult.error) {
-        pendingRows.push(
-          ...((result.pendingResult.data ?? []) as PendingReport[]).filter((x) =>
-            validPoint(x.latitude, x.longitude),
-          ),
-        );
+        pendingRows.push(...((result.pendingResult.data ?? []) as PendingReport[]).filter((x) => validPoint(x.latitude, x.longitude)));
       }
     }
 
@@ -241,48 +209,20 @@ export default function MapScreen() {
     loadFeed();
   }, [loadFeed]);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const [school, elOmirat, benYoub] = await Promise.all([
-        geocodeFirstNearby(
-          'École Primaire 1 Novembre 1954, Lafluid, Baraki, Alger, Algeria',
-          'school-1-nov-1954',
-          'مدرسة 1 نوفمبر 1954',
-        ),
-        geocodeFirstNearby('حي العميرات، براقي، الجزائر', 'el-omirat', 'حي العميرات'),
-        geocodeFirstNearby('Cité Benyoub, Baraki, Algeria', 'ben-youb-geocoded', 'حي بن يوب'),
-      ]);
-      if (!alive) return;
-
-      const resolved = [school, elOmirat, benYoub, BEN_YOUB_ANCHOR].filter(Boolean) as LocalAnchor[];
-      const unique: LocalAnchor[] = [];
-      for (const point of resolved) {
-        if (!unique.some((u) => distanceKm(u, point) < 0.06)) unique.push(point);
-      }
-      setAnchors(unique.length >= 2 ? unique : FALLBACK_SERVICE_POINTS);
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const servicePoints = anchors.length >= 2 ? anchors : FALLBACK_SERVICE_POINTS;
-  const polygon = useMemo(() => servicePolygon(servicePoints), [servicePoints]);
   const latest = items[0];
   const pendingLatest = pending[0];
 
   const focusServiceArea = useCallback(() => {
     if (!mapReady || !mapRef.current) return;
-    mapRef.current.fitToCoordinates(servicePoints, {
-      edgePadding: { top: 70, right: 45, bottom: 150, left: 45 },
+    mapRef.current.fitToCoordinates(SERVICE_POINTS, {
+      edgePadding: { top: 54, right: 34, bottom: 150, left: 34 },
       animated: true,
     });
-  }, [mapReady, servicePoints]);
+  }, [mapReady]);
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
-    const bounds = boundsFromPoints(servicePoints);
+    const bounds = boundsFromPoints(SERVICE_POINTS);
     if (bounds) {
       const map = mapRef.current as MapView & {
         setMapBoundaries?: (northEast: LatLng, southWest: LatLng) => void;
@@ -291,7 +231,7 @@ export default function MapScreen() {
     }
     const timeout = setTimeout(focusServiceArea, 250);
     return () => clearTimeout(timeout);
-  }, [focusServiceArea, mapReady, servicePoints]);
+  }, [focusServiceArea, mapReady]);
 
   const focusTruck = useCallback(() => {
     if (!mapReady || !mapRef.current || !latest || !validPoint(latest.latitude, latest.longitude)) return;
@@ -337,7 +277,7 @@ export default function MapScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>الخريطة الحية</Text>
-          <Text style={styles.sub}>حي العميرات • حي بن يوب</Text>
+          <Text style={styles.sub}>الحوش • حي بن يوب</Text>
         </View>
         <Pressable style={styles.refresh} onPress={loadFeed} disabled={loading}>
           <Ionicons name="refresh" size={18} color={PRIMARY} />
@@ -360,90 +300,77 @@ export default function MapScreen() {
         </View>
       ) : (
         <View style={styles.mapShell}>
-          {hasGoogleMapsKey ? (
-            <MapView
-              ref={mapRef}
-              style={StyleSheet.absoluteFill}
-              initialRegion={DEFAULT_REGION}
-              minZoomLevel={14.3}
-              maxZoomLevel={20}
-              mapType="standard"
-              showsBuildings
-              showsPointsOfInterest
-              showsTraffic={false}
-              toolbarEnabled={false}
-              onMapReady={() => setMapReady(true)}
-              mapPadding={{ top: 12, right: 8, bottom: 105, left: 8 }}
-            >
-              {polygon.length >= 4 && (
-                <Polygon
-                  coordinates={polygon}
-                  strokeColor="rgba(22,138,85,0.55)"
-                  fillColor="rgba(22,138,85,0.055)"
-                  strokeWidth={2}
-                />
-              )}
+          <MapView
+            ref={mapRef}
+            style={StyleSheet.absoluteFill}
+            initialRegion={DEFAULT_REGION}
+            minZoomLevel={14.8}
+            maxZoomLevel={20}
+            mapType="standard"
+            showsBuildings
+            showsPointsOfInterest
+            showsTraffic={false}
+            toolbarEnabled={false}
+            onMapReady={() => setMapReady(true)}
+            mapPadding={{ top: 12, right: 8, bottom: 105, left: 8 }}
+          >
+            <Polyline
+              coordinates={EL_HOUCH_CORRIDOR}
+              strokeColor="rgba(22,138,85,0.38)"
+              strokeWidth={7}
+            />
 
-              {anchors.map((anchor) => (
-                <Marker
-                  key={anchor.key}
-                  coordinate={{ latitude: anchor.latitude, longitude: anchor.longitude }}
-                  title={anchor.label}
-                  pinColor="#6E8F82"
-                />
-              ))}
+            <Polygon
+              coordinates={BEN_YOUB_POLYGON}
+              strokeColor="rgba(22,138,85,0.58)"
+              fillColor="rgba(22,138,85,0.045)"
+              strokeWidth={2}
+            />
 
-              {latest && (
-                <TruckPulseMarker coordinate={{ latitude: latest.latitude, longitude: latest.longitude }} />
-              )}
+            <Marker coordinate={EL_HOUCH_CORRIDOR[2]} title="الحوش" description="امتداد الطريق من جهة كونديا حتى بداية حي بن يوب" pinColor="#5E8D77" />
+            <Marker coordinate={HAMZA_MOSQUE} title="مسجد حمزة" description="داخل حي بن يوب" pinColor="#168A55" />
+            <Marker coordinate={BEN_YOUB_CENTER} title="حي بن يوب" description="التجمع السكني" pinColor="#168A55" />
 
-              {items.slice(1, 5).map((item) => (
-                <Marker
-                  key={item.id}
-                  coordinate={{ latitude: item.latitude, longitude: item.longitude }}
-                  title="رصد مؤكد سابق"
-                  description={`حي ${item.neighborhood}`}
-                  pinColor={PRIMARY}
-                />
-              ))}
+            {latest && <TruckPulseMarker coordinate={{ latitude: latest.latitude, longitude: latest.longitude }} />}
 
-              {pending.map((item) => (
-                <Marker
-                  key={`pending-${item.id}`}
-                  coordinate={{ latitude: item.latitude, longitude: item.longitude }}
-                  title="رصد أولي ينتظر التأكيد"
-                  description={`حي ${item.neighborhood}`}
-                  pinColor="#D98E04"
-                />
-              ))}
-            </MapView>
-          ) : (
-            <View style={styles.mapFallback}>
-              <Text style={styles.mapEmoji}>🗺️</Text>
-              <Text style={styles.mapFallbackTitle}>الخريطة جاهزة للربط</Text>
-              <Text style={styles.mapFallbackText}>يجب تضمين مفتاح Google Maps في نسخة Android.</Text>
-            </View>
-          )}
+            {items.slice(1, 5).map((item) => (
+              <Marker
+                key={item.id}
+                coordinate={{ latitude: item.latitude, longitude: item.longitude }}
+                title="رصد مؤكد سابق"
+                description={displayNeighborhood(item.neighborhood)}
+                pinColor={PRIMARY}
+              />
+            ))}
 
-          {hasGoogleMapsKey && (
-            <View style={styles.floatingActions}>
-              <Pressable style={styles.floatingButton} onPress={focusServiceArea}>
-                <Ionicons name="map" size={19} color={PRIMARY} />
-                <Text style={styles.floatingText}>الحي</Text>
+            {pending.map((item) => (
+              <Marker
+                key={`pending-${item.id}`}
+                coordinate={{ latitude: item.latitude, longitude: item.longitude }}
+                title="رصد أولي ينتظر التأكيد"
+                description={displayNeighborhood(item.neighborhood)}
+                pinColor="#D98E04"
+              />
+            ))}
+          </MapView>
+
+          <View style={styles.floatingActions}>
+            <Pressable style={styles.floatingButton} onPress={focusServiceArea}>
+              <Ionicons name="map" size={19} color={PRIMARY} />
+              <Text style={styles.floatingText}>المنطقة</Text>
+            </Pressable>
+            {latest && (
+              <Pressable style={[styles.floatingButton, styles.floatingButtonPrimary]} onPress={focusTruck}>
+                <Ionicons name="locate" size={19} color="#FFFFFF" />
+                <Text style={styles.floatingTextPrimary}>الشاحنة</Text>
               </Pressable>
-              {latest && (
-                <Pressable style={[styles.floatingButton, styles.floatingButtonPrimary]} onPress={focusTruck}>
-                  <Ionicons name="locate" size={19} color="#FFFFFF" />
-                  <Text style={styles.floatingTextPrimary}>الشاحنة</Text>
-                </Pressable>
-              )}
-            </View>
-          )}
+            )}
+          </View>
 
           {pendingLatest && !latest && (
             <View style={styles.pendingCard}>
               <Text style={styles.pendingBadge}>رصد أولي – في انتظار التأكيد</Text>
-              <Text style={styles.pendingTitle}>بلاغ قريب في حي {pendingLatest.neighborhood}</Text>
+              <Text style={styles.pendingTitle}>بلاغ قريب في {displayNeighborhood(pendingLatest.neighborhood)}</Text>
               <Pressable
                 style={styles.confirmButton}
                 disabled={confirmingId === pendingLatest.id}
@@ -464,7 +391,7 @@ export default function MapScreen() {
                 </View>
                 <View style={styles.liveTextWrap}>
                   <Text style={styles.liveTitle}>شاحنة النظافة قريبة</Text>
-                  <Text style={styles.liveNeighborhood}>حي {latest.neighborhood}</Text>
+                  <Text style={styles.liveNeighborhood}>{displayNeighborhood(latest.neighborhood)}</Text>
                 </View>
                 <View style={styles.confirmedBadge}>
                   <Text style={styles.confirmedBadgeText}>مرور مؤكد</Text>
@@ -516,10 +443,6 @@ const styles = StyleSheet.create({
   },
   refreshText: { color: PRIMARY, fontWeight: '900' },
   mapShell: { flex: 1, position: 'relative', overflow: 'hidden' },
-  mapFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, backgroundColor: '#EAF7F0' },
-  mapEmoji: { fontSize: 56 },
-  mapFallbackTitle: { fontSize: 21, fontWeight: '900', color: DARK, marginTop: 12 },
-  mapFallbackText: { textAlign: 'center', color: '#6B7A73', lineHeight: 22, marginTop: 8 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28, gap: 12 },
   muted: { color: '#6B7A73', textAlign: 'center', lineHeight: 22 },
   errorTitle: { fontSize: 20, fontWeight: '900', color: '#9B2C2C', textAlign: 'center' },
@@ -527,7 +450,7 @@ const styles = StyleSheet.create({
   retryText: { color: '#fff', fontWeight: '900' },
   floatingActions: { position: 'absolute', top: 14, left: 12, gap: 8 },
   floatingButton: {
-    minWidth: 72,
+    minWidth: 76,
     height: 42,
     paddingHorizontal: 12,
     borderRadius: 16,
