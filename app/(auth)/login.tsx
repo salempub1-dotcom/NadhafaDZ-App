@@ -24,40 +24,22 @@ export default function LoginScreen() {
   return (
     <MintBackground>
       <SafeAreaView style={styles.safe}>
-        <KeyboardAvoidingView
-          style={styles.safe}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={0}
-        >
-          <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="always"
-            keyboardDismissMode="none"
-            showsVerticalScrollIndicator={false}
-          >
-            <PhotoFadeHero height={235}>
+        <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
+          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="always" keyboardDismissMode="none" showsVerticalScrollIndicator={false}>
+            <PhotoFadeHero height={220}>
               <Text style={styles.brand}>NadhafaDZ</Text>
               <Text style={styles.heroTitle}>مرحبًا بعودتك</Text>
+              <Text style={styles.heroText}>تابع الخريطة والتنبيهات في الحوش وحي بن يوب</Text>
             </PhotoFadeHero>
 
             <View style={styles.card}>
               <Text style={styles.title}>تسجيل الدخول</Text>
-              <Text style={styles.subtitle}>ادخل إلى حسابك لمتابعة حيّك والبلاغات القريبة.</Text>
+              <Text style={styles.subtitle}>أدخل بيانات حسابك للعودة إلى لوحة المتابعة.</Text>
 
               <Text style={styles.label}>البريد الإلكتروني</Text>
               <View style={styles.inputWrap}>
                 <Ionicons name="mail-outline" size={20} color="#7D8A84" />
-                <TextInput
-                  style={styles.input}
-                  placeholder="name@email.com"
-                  placeholderTextColor="#9AA6A0"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  returnKeyType="next"
-                  value={email}
-                  onChangeText={setEmail}
-                />
+                <TextInput style={styles.input} placeholder="name@email.com" placeholderTextColor="#9AA6A0" autoCapitalize="none" autoCorrect={false} keyboardType="email-address" returnKeyType="next" value={email} onChangeText={setEmail} />
               </View>
 
               <Text style={styles.label}>كلمة المرور</Text>
@@ -65,23 +47,14 @@ export default function LoginScreen() {
                 <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
                   <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={21} color="#7D8A84" />
                 </Pressable>
-                <TextInput
-                  style={styles.input}
-                  placeholder="كلمة المرور"
-                  placeholderTextColor="#9AA6A0"
-                  secureTextEntry={!showPassword}
-                  returnKeyType="done"
-                  value={password}
-                  onChangeText={setPassword}
-                  onSubmitEditing={login}
-                />
+                <TextInput style={styles.input} placeholder="كلمة المرور" placeholderTextColor="#9AA6A0" secureTextEntry={!showPassword} returnKeyType="done" value={password} onChangeText={setPassword} onSubmitEditing={login} />
               </View>
 
               <Pressable style={[styles.button, loading && styles.disabled]} onPress={login} disabled={loading}>
                 <Ionicons name="log-in-outline" size={20} color="#FFFFFF" />
                 <Text style={styles.buttonText}>{loading ? 'جارٍ الدخول...' : 'تسجيل الدخول'}</Text>
               </Pressable>
-              <Text style={styles.footer}>ليس لديك حساب؟ <Link href="/(auth)/register" style={styles.link}>أنشئ حسابًا</Link></Text>
+              <Text style={styles.footer}>ليس لديك حساب؟ <Link href="/(auth)/register" style={styles.link}>إنشاء حساب جديد</Link></Text>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -93,11 +66,12 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { paddingBottom: 30 },
-  brand: { fontSize: 17, fontWeight: '900', color: colors.primary, textAlign: 'right' },
-  heroTitle: { fontSize: 28, fontWeight: '900', color: colors.primaryDark, textAlign: 'right', marginTop: 3 },
-  card: { marginHorizontal: 18, marginTop: -16, backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: radius.xl, padding: 22, borderWidth: 1, borderColor: colors.border, ...shadow },
-  title: { fontSize: 29, fontWeight: '900', color: colors.text, textAlign: 'right' },
-  subtitle: { fontSize: 15, color: colors.secondary, textAlign: 'right', lineHeight: 23, marginTop: 6, marginBottom: 12 },
+  brand: { fontSize: 18, fontWeight: '900', color: colors.primary, textAlign: 'right' },
+  heroTitle: { fontSize: 28, fontWeight: '900', color: colors.primaryDark, textAlign: 'right', marginTop: 4 },
+  heroText: { color: colors.secondary, textAlign: 'right', marginTop: 5, fontWeight: '700' },
+  card: { marginHorizontal: 18, marginTop: -14, backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: radius.xl, padding: 22, borderWidth: 1, borderColor: colors.border, ...shadow },
+  title: { fontSize: 27, fontWeight: '900', color: colors.text, textAlign: 'right' },
+  subtitle: { fontSize: 14, color: colors.secondary, textAlign: 'right', lineHeight: 22, marginTop: 6, marginBottom: 12 },
   label: { fontSize: 14, fontWeight: '800', color: colors.primaryDark, textAlign: 'right', marginBottom: 7, marginTop: 12 },
   inputWrap: { minHeight: 56, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, paddingHorizontal: 14, backgroundColor: '#FCFEFD', flexDirection: 'row', alignItems: 'center', gap: 10 },
   input: { flex: 1, fontSize: 16, textAlign: 'right', paddingVertical: 12, color: colors.text },
