@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
-import { Ionicons } from '@react-native-vector-icons/ionicons';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 
 const iconMap: Record<string, { active: string; inactive: string }> = {
@@ -13,6 +14,9 @@ const iconMap: Record<string, { active: string; inactive: string }> = {
 
 export default function AppLayout() {
   const { session, loading } = useAuth();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 10);
+
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -30,9 +34,9 @@ export default function AppLayout() {
         tabBarInactiveTintColor: '#8A9690',
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          height: 76,
+          height: 62 + bottomInset,
           paddingTop: 7,
-          paddingBottom: 9,
+          paddingBottom: bottomInset,
           borderTopWidth: 1,
           borderTopColor: '#E3ECE7',
           backgroundColor: '#FFFFFF',
@@ -42,15 +46,15 @@ export default function AppLayout() {
           shadowRadius: 14,
           shadowOffset: { width: 0, height: -4 },
         },
-        tabBarLabelStyle: { fontWeight: '800', fontSize: 11 },
+        tabBarLabelStyle: { fontWeight: '800', fontSize: 11, marginTop: 2 },
         tabBarIcon: ({ focused, color }) => {
           const pair = iconMap[route.name] ?? iconMap.home;
           return (
             <View
               style={{
                 width: 40,
-                height: 32,
-                borderRadius: 16,
+                height: 30,
+                borderRadius: 15,
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: focused ? '#E8F6EF' : 'transparent',
