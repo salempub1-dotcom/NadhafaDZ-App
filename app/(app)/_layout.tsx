@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -5,7 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { colors } from '@/ui/theme';
 
-const iconMap: Record<string, { active: string; inactive: string }> = {
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
+
+const iconMap: Record<string, { active: IoniconName; inactive: IoniconName }> = {
   home: { active: 'home', inactive: 'home-outline' },
   map: { active: 'map', inactive: 'map-outline' },
   report: { active: 'megaphone', inactive: 'megaphone-outline' },
@@ -51,16 +54,7 @@ export default function AppLayout() {
         tabBarIcon: ({ focused, color }) => {
           const pair = iconMap[route.name] ?? iconMap.home;
           return (
-            <View
-              style={{
-                width: 42,
-                height: 31,
-                borderRadius: 16,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: focused ? colors.decorative : 'transparent',
-              }}
-            >
+            <View style={{ width: 42, height: 31, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: focused ? colors.decorative : 'transparent' }}>
               <Ionicons name={focused ? pair.active : pair.inactive} size={22} color={color} />
             </View>
           );
