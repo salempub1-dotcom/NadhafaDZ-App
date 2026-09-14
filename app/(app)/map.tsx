@@ -74,6 +74,12 @@ function relativeAge(date: string | null | undefined) {
   return hours === 1 ? 'منذ ساعة' : `منذ ${hours} ساعات`;
 }
 
+function routePointDescription(index: number) {
+  if (index === 0) return 'بداية نطاق الخدمة على الطريق الرئيسي';
+  if (index === SERVICE_LANDMARKS.length - 1) return 'آخر نقطة على الطريق قبل دخول الشاحنة إلى المجمع السكني';
+  return `نقطة ${index + 1} من مسار الشاحنة`;
+}
+
 function TruckPulseMarker({ coordinate }: { coordinate: LatLng }) {
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -113,12 +119,9 @@ export default function MapScreen() {
   const [mapReady, setMapReady] = useState(false);
   const [mapType, setMapType] = useState<MapKind>('standard');
 
-  const serviceViewPoints: LatLng[] = [
-    SERVICE_START,
-    ...SERVICE_LANDMARKS.filter((landmark) => validPoint(landmark.latitude, landmark.longitude)).map(
-      (landmark) => ({ latitude: landmark.latitude, longitude: landmark.longitude }),
-    ),
-  ];
+  const serviceViewPoints: LatLng[] = SERVICE_LANDMARKS
+    .filter((landmark) => validPoint(landmark.latitude, landmark.longitude))
+    .map((landmark) => ({ latitude: landmark.latitude, longitude: landmark.longitude }));
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -237,7 +240,15 @@ export default function MapScreen() {
             onMapReady={() => setMapReady(true)}
             mapPadding={{ top: 12, right: 8, bottom: 115, left: 8 }}
           >
-            <Marker coordinate={SERVICE_START} title="بداية الطريق الرئيسي" description="بداية نطاق الخدمة" pinColor={PRIMARY} />
+            {SERVICE_LANDMARKS.map((landmark, index) => (
+              <Marker
+                key={landmark.key}
+                coordinate={{ latitude: landmark.latitude, longitude: landmark.longitude }}
+                title={landmark.name}
+                description={routePointDescription(index)}
+                pinColor={index === 0 ? PRIMARY : index === SERVICE_LANDMARKS.length - 1 ? '#C73B32' : '#2F80ED'}
+              />
+            ))}
 
             {latest && <TruckPulseMarker coordinate={{ latitude: latest.latitude, longitude: latest.longitude }} />}
             {pending.map((item) => <Marker key={`pending-${item.id}`} coordinate={{ latitude: item.latitude, longitude: item.longitude }} title="رصد أولي ينتظر التأكيد" pinColor="#D98E04" />)}
@@ -245,7 +256,7 @@ export default function MapScreen() {
 
           <View style={styles.referenceChip} pointerEvents="none">
             <Ionicons name="git-branch-outline" size={14} color={PRIMARY} />
-            <Text style={styles.referenceChipText}>بداية النطاق مؤكدة من المفترق الرئيسي</Text>
+            <Text style={styles.referenceChipText}>5 نقاط مؤكدة لمسار الشاحنة</Text>
           </View>
 
           <View style={styles.floatingActions}>
@@ -281,7 +292,7 @@ export default function MapScreen() {
             </View>
           )}
 
-          {!latest && !pendingLatest && <View style={styles.emptyCard}><Text style={styles.emptyTitle}>لا يوجد رصد مؤكد حاليًا</Text><Text style={styles.emptyText}>عند تأكيد مرور الشاحنة سيظهر موقعها المتوهج فوق الطريق الفعلي أو قرب أقرب معلم معروف.</Text></View>}
+          {!latest && !pendingLatest && <View style={styles.emptyCard}><Text style={styles.emptyTitle}>لا يوجد رصد مؤكد حاليًا</Text><Text style={styles.emptyText}>النقاط الخمس تحدد الطريق التشغيلي المعروف. بعد النقطة الأخيرة تدخل الشاحنة إلى المجمع السكني لجمع القمامة، والطريق السفلي غير المعبد غير معتمد ضمن المسار.</Text></View>}
         </View>
       )}
     </SafeAreaView>
