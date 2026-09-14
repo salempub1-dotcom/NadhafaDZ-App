@@ -4,7 +4,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import * as Location from 'expo-location';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNeighborhood } from '@/contexts/NeighborhoodContext';
+import { getNeighborhoodDisplayName, useNeighborhood } from '@/contexts/NeighborhoodContext';
 import { MintBackground } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
 
@@ -12,6 +12,7 @@ export default function ReportScreen() {
   const { user } = useAuth();
   const { neighborhood } = useNeighborhood();
   const [loading, setLoading] = useState(false);
+  const neighborhoodLabel = getNeighborhoodDisplayName(neighborhood);
 
   async function sendReport() {
     if (!user) return;
@@ -28,7 +29,7 @@ export default function ReportScreen() {
         status: 'pending',
       });
       if (error) throw error;
-      Alert.alert('تم إرسال البلاغ', `سُجل البلاغ في حي ${neighborhood}. سيتم اعتباره مؤكدًا بعد تأكيد مستخدم آخر قريب.`);
+      Alert.alert('تم إرسال البلاغ', `سُجل البلاغ في ${neighborhoodLabel}. سيتم اعتباره مؤكدًا بعد تأكيد مستخدم آخر قريب.`);
     } catch (e: any) {
       Alert.alert('تعذر إرسال البلاغ', e?.message ?? 'حاول مرة أخرى.');
     } finally {
@@ -48,7 +49,7 @@ export default function ReportScreen() {
         <View style={styles.card}>
           <View style={styles.iconWrap}><Ionicons name="trash-bin-outline" size={38} color={colors.primary} /></View>
           <Text style={styles.title}>هل الشاحنة أمامك الآن؟</Text>
-          <View style={styles.neighborhoodPill}><Ionicons name="location-outline" size={16} color={colors.primary} /><Text style={styles.neighborhood}>حي {neighborhood}</Text></View>
+          <View style={styles.neighborhoodPill}><Ionicons name="location-outline" size={16} color={colors.primary} /><Text style={styles.neighborhood}>{neighborhoodLabel}</Text></View>
           <Text style={styles.body}>عند الضغط، نسجل إحداثيات الموقع في تلك اللحظة كموقع تقريبي للشاحنة. لا نعرض هويتك أو موقعك الشخصي للسكان.</Text>
           <Pressable style={[styles.button, loading && styles.disabled]} onPress={sendReport} disabled={loading}>
             <Ionicons name="navigate-outline" size={20} color="#FFFFFF" />
@@ -58,7 +59,7 @@ export default function ReportScreen() {
 
         <View style={styles.note}>
           <View style={styles.noteHead}><Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} /><Text style={styles.noteTitle}>حماية من البلاغات الخاطئة</Text></View>
-          <Text style={styles.noteText}>البلاغ الأول يبقى «رصدًا أوليًا». بعد تأكيده من مستخدم آخر قريب يتحول إلى مرور مؤكد ويمكن تنبيه سكان الحي.</Text>
+          <Text style={styles.noteText}>البلاغ الأول يبقى «رصدًا أوليًا». بعد تأكيده من مستخدم آخر قريب يتحول إلى مرور مؤكد ويمكن تنبيه سكان المنطقة.</Text>
         </View>
       </SafeAreaView>
     </MintBackground>
