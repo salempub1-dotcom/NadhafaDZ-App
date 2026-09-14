@@ -35,8 +35,8 @@ export const SERVICE_LANDMARKS: ServiceLandmark[] = [
     kind: 'mosque',
   },
   {
-    key: 'route-4-cyber-baraka',
-    name: 'سيبير البركة',
+    key: 'route-4-baraka',
+    name: 'سبيرات البركة – حي بن يوب (M438+5M3)',
     latitude: 36.653063,
     longitude: 3.116484,
     neighborhood: 'بن يوب',
