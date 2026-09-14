@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   softGlow: { position: 'absolute', width: 360, height: 360, borderRadius: 180, backgroundColor: '#FFFFFF', opacity: 0.46, left: -80, top: 250 },
   heroWrap: { width: '100%', overflow: 'hidden', backgroundColor: '#DDEFE5' },
   hero: { flex: 1, width: '100%', justifyContent: 'flex-end', overflow: 'hidden' },
-  photoTint: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(7,60,50,0.06)' },
+  photoTint: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(7,60,50,0.06)' },
   fadeTop: { position: 'absolute', left: 0, right: 0, bottom: 94, height: 82, backgroundColor: 'rgba(245,250,247,0.06)' },
   fadeMid: { position: 'absolute', left: 0, right: 0, bottom: 42, height: 84, backgroundColor: 'rgba(245,250,247,0.42)' },
   fadeBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 54, backgroundColor: colors.background },
