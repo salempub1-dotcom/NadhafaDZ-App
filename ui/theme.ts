@@ -1,3 +1,5 @@
+import { heroImageData } from '@/ui/heroImageData';
+
 export const colors = {
   primary: '#008B4C',
   primaryDark: '#073C32',
@@ -38,6 +40,4 @@ export const shadow = {
   elevation: 4,
 };
 
-export const heroImage = {
-  uri: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/Loading_Refuse_into_Dustbin_Truck.jpg?width=1600',
-};
+export const heroImage = { uri: heroImageData };
