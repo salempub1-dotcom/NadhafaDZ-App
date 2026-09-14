@@ -53,7 +53,7 @@ export default function NotificationsScreen() {
               <Text style={styles.status}>{enabled ? 'مفعّلة' : 'غير مفعّلة'}</Text>
             </View>
           </View>
-          <Text style={styles.body}>عند تأكيد مرور الشاحنة من مستخدم ثانٍ قريب، نرسل إشعارًا للسكان الذين فعّلوا تنبيهات نفس المنطقة.</Text>
+          <Text style={styles.body}>عند تأكيد مرور الشاحنة من مستخدم ثانٍ قريب، يصلك تنبيه باسم أقرب معلم والمسافة التقريبية، مثل: «الشاحنة بالقرب من مسجد حمزة على بعد نحو 100 متر».</Text>
           <Pressable style={[styles.button, enabled && styles.buttonSecondary, loading && styles.disabled]} onPress={enabled ? disableNotifications : enableNotifications} disabled={loading}>
             <Ionicons name={enabled ? 'notifications-off-outline' : 'notifications-outline'} size={19} color={enabled ? colors.primaryDark : '#FFFFFF'} />
             <Text style={[styles.buttonText, enabled && styles.buttonTextSecondary]}>{loading ? 'جارٍ الحفظ...' : enabled ? 'إيقاف التنبيهات' : 'تفعيل التنبيهات'}</Text>
@@ -62,10 +62,10 @@ export default function NotificationsScreen() {
 
         <View style={styles.card}>
           <View style={styles.cardHead}>
-            <View style={styles.iconWrap}><Ionicons name="shield-checkmark-outline" size={24} color={colors.primary} /></View>
-            <Text style={styles.cardTitle}>الخصوصية</Text>
+            <View style={styles.iconWrap}><Ionicons name="location-outline" size={24} color={colors.primary} /></View>
+            <Text style={styles.cardTitle}>تنبيهات مفهومة محليًا</Text>
           </View>
-          <Text style={styles.body}>التنبيه مرتبط بالمنطقة التي اخترتها فقط. لا نرسل موقعك الشخصي أو اسمك إلى السكان الآخرين.</Text>
+          <Text style={styles.body}>نستخدم إحداثيات الشاحنة المؤكدة فقط لمقارنتها بالمعالم المعروفة داخل الحوش وحي بن يوب. لا يظهر موقع صاحب البلاغ أو هويته.</Text>
         </View>
       </SafeAreaView>
     </MintBackground>
