@@ -1,5 +1,3 @@
-import { heroImageData } from '@/ui/heroImageData';
-
 export const colors = {
   primary: '#008B4C',
   primaryDark: '#073C32',
@@ -40,7 +38,6 @@ export const shadow = {
   elevation: 4,
 };
 
-export const heroImage = { uri: heroImageData };
-export const heroFallbackImage = {
-  uri: 'https://commons.wikimedia.org/wiki/Special:FilePath/Loading%20Refuse%20into%20Dustbin%20Truck.jpg?width=960',
-};
+export const welcomeHeroImage = require('../assets/images/welcome-sanitation.jpg');
+export const authHeroImage = require('../assets/images/auth-sanitation.jpg');
+export const homeHeroImage = require('../assets/images/home-sanitation.jpg');
