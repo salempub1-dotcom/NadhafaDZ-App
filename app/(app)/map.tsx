@@ -40,8 +40,6 @@ const DARK = '#17352A';
 const LIGHT = '#F5FAF7';
 const NEIGHBORHOODS = ['بن يوب', 'العميرات'] as const;
 
-// Verified map anchor for Cité Benyoub (M438+MR8, Baraki).
-// Other locality anchors are resolved at runtime with the Android geocoder so we do not invent coordinates.
 const BEN_YOUB_ANCHOR: LocalAnchor = {
   key: 'ben-youb',
   label: 'حي بن يوب',
@@ -49,8 +47,6 @@ const BEN_YOUB_ANCHOR: LocalAnchor = {
   longitude: 3.1170625,
 };
 
-// Publicly mapped Baraki landmarks around the local service corridor. These are only safe fallback
-// points if Android geocoding cannot resolve the requested school / El Omirat names.
 const FALLBACK_SERVICE_POINTS: LocalAnchor[] = [
   { key: 'west-fallback', label: 'براقي - غرب نطاق الخدمة', latitude: 36.6540625, longitude: 3.1003125 },
   { key: 'north-fallback', label: 'براقي - شمال نطاق الخدمة', latitude: 36.6699375, longitude: 3.1050625 },
@@ -64,7 +60,9 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.023,
 };
 
-const hasGoogleMapsKey = Boolean(process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY);
+// Google Maps credentials are embedded in the installed Android binary by app.config.js.
+// OTA updates do not need (and may not receive) the build-time environment variable.
+const hasGoogleMapsKey = true;
 
 function validPoint(lat: unknown, lon: unknown) {
   return (
