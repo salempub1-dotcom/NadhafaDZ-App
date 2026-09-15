@@ -2,6 +2,7 @@ import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Tex
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { Redirect, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { BrandLogo } from '@/ui/BrandLogo';
 import { CitySilhouette, MintBackground, PhotoFadeHero } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
 
@@ -22,7 +23,7 @@ export default function Index() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <PhotoFadeHero height={430}>
             <View style={styles.heroBrandRow}>
-              <View style={styles.logoMark}><Ionicons name="leaf" size={27} color="#FFFFFF" /></View>
+              <BrandLogo size={86} />
               <Text style={styles.brand}>NadhafaDZ</Text>
             </View>
             <Text style={styles.tagline}>معًا من أجل حي أنظف</Text>
@@ -59,8 +60,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { paddingBottom: 18 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  heroBrandRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 10, alignSelf: 'flex-end' },
-  logoMark: { width: 52, height: 52, borderRadius: 18, backgroundColor: 'rgba(0,139,76,0.94)', alignItems: 'center', justifyContent: 'center', shadowColor: colors.primaryDark, shadowOpacity: 0.18, shadowRadius: 10, elevation: 3 },
+  heroBrandRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 12, alignSelf: 'flex-end' },
   brand: { fontSize: 32, fontWeight: '900', color: colors.primaryDark, textAlign: 'right' },
   tagline: { color: colors.primaryDark, textAlign: 'right', fontSize: 22, fontWeight: '900', marginTop: 12 },
   heroText: { color: colors.secondary, textAlign: 'right', fontSize: 15, fontWeight: '700', marginTop: 6 },
