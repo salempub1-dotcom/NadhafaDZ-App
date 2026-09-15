@@ -16,6 +16,7 @@
     "plugins": ["expo-router", "expo-location", "expo-notifications", "expo-updates"],
     "android": {
       "package": "com.nadhafadz.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/branding/nadhafadz-logo.png",
         "backgroundColor": "#F5FAF7"
