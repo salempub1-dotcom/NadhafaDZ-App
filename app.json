@@ -6,6 +6,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/branding/nadhafadz-logo.png",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -15,6 +16,10 @@
     "plugins": ["expo-router", "expo-location", "expo-notifications", "expo-updates"],
     "android": {
       "package": "com.nadhafadz.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/branding/nadhafadz-logo.png",
+        "backgroundColor": "#F5FAF7"
+      },
       "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "POST_NOTIFICATIONS"]
     },
     "ios": {
