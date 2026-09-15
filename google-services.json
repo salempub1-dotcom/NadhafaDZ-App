@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "127794869596",
+    "project_id": "nadhafadz",
+    "storage_bucket": "nadhafadz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:127794869596:android:3914f7cb4250fc784a3d99",
+        "android_client_info": {
+          "package_name": "com.nadhafadz.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPL0dacKdJf_c8J5TUqJoAqgs15HXzos4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
