@@ -3,6 +3,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, SafeAreaView, ScrollV
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
+import { BrandLogo } from '@/ui/BrandLogo';
 import { MintBackground, PhotoFadeHero } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
 
@@ -33,7 +34,10 @@ export default function RegisterScreen() {
         <KeyboardAvoidingView style={styles.safe} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="always" keyboardDismissMode="none" showsVerticalScrollIndicator={false}>
             <PhotoFadeHero height={220}>
-              <Text style={styles.brand}>NadhafaDZ</Text>
+              <View style={styles.brandRow}>
+                <BrandLogo size={58} />
+                <Text style={styles.brand}>NadhafaDZ</Text>
+              </View>
               <Text style={styles.heroTitle}>إنشاء حساب</Text>
               <Text style={styles.heroText}>انضم إلينا وساهم في جعل منطقتنا أكثر نظافة</Text>
             </PhotoFadeHero>
@@ -79,6 +83,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { paddingBottom: 30 },
+  brandRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, alignSelf: 'flex-end' },
   brand: { fontSize: 18, fontWeight: '900', color: colors.primary, textAlign: 'right' },
   heroTitle: { fontSize: 28, fontWeight: '900', color: colors.primaryDark, textAlign: 'right', marginTop: 4 },
   heroText: { color: colors.secondary, textAlign: 'right', marginTop: 5, fontWeight: '700' },
