@@ -9,6 +9,14 @@ import { proximityLabel } from '@/lib/landmarks';
 import { MintBackground } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
 
+type SubmitResult = {
+  report_id: string;
+  report_status: 'pending' | 'confirmed';
+  report_session_id: string | null;
+  report_sighting_kind: 'candidate' | 'session_point';
+  auto_confirmed: boolean;
+};
+
 export default function ReportScreen() {
   const { user } = useAuth();
   const { neighborhood } = useNeighborhood();
@@ -20,24 +28,46 @@ export default function ReportScreen() {
     setLoading(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return Alert.alert('الموقع مطلوب', 'اسمح للتطبيق بالوصول إلى الموقع عند الإبلاغ عن الشاحنة.');
-      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      if (status !== 'granted') {
+        Alert.alert('الموقع مطلوب', 'اسمح للتطبيق بالوصول إلى الموقع عند الإبلاغ عن الشاحنة.');
+        return;
+      }
+
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       const { latitude, longitude } = pos.coords;
-      const { error } = await supabase.from('truck_reports').insert({
-        reporter_id: user.id,
-        latitude,
-        longitude,
-        neighborhood,
-        status: 'pending',
+
+      const { data, error } = await supabase.rpc('submit_truck_sighting', {
+        target_neighborhood: neighborhood,
+        target_lat: latitude,
+        target_lon: longitude,
       });
       if (error) throw error;
+
+      const result = ((data ?? [])[0] as SubmitResult | undefined);
+      if (!result) throw new Error('لم يتم تسجيل الرصد.');
+
       const nearby = proximityLabel(latitude, longitude);
-      Alert.alert(
-        'تم إرسال البلاغ',
-        nearby
-          ? `سُجل موقع الشاحنة ${nearby}. سيتم اعتباره مؤكدًا بعد تأكيد مستخدم آخر قريب.`
-          : `سُجل البلاغ في ${neighborhoodLabel}. سيتم اعتباره مؤكدًا بعد تأكيد مستخدم آخر قريب.`,
-      );
+
+      if (result.auto_confirmed) {
+        const { error: notifyError } = await supabase.functions.invoke('notify-neighborhood', {
+          body: { report_id: result.report_id },
+        });
+        if (notifyError) console.warn('Push notification dispatch failed:', notifyError.message);
+
+        Alert.alert(
+          'تم تحديث الموقع الحي',
+          nearby
+            ? `الشاحنة في جلسة رصد مؤكدة. أضيف موقع جديد ${nearby} إلى الخريطة الحية.`
+            : `الشاحنة في جلسة رصد مؤكدة. أضيف موقع جديد داخل ${neighborhoodLabel} إلى الخريطة الحية.`,
+        );
+      } else {
+        Alert.alert(
+          'تم إرسال الرصد الأولي',
+          nearby
+            ? `سُجل موقع الشاحنة ${nearby}. يحتاج إلى تأكيد مستخدم آخر قريب لبدء جلسة الرصد الحية.`
+            : `سُجل البلاغ في ${neighborhoodLabel}. يحتاج إلى تأكيد مستخدم آخر قريب لبدء جلسة الرصد الحية.`,
+        );
+      }
     } catch (e: any) {
       Alert.alert('تعذر إرسال البلاغ', e?.message ?? 'حاول مرة أخرى.');
     } finally {
@@ -51,7 +81,7 @@ export default function ReportScreen() {
         <View style={styles.header}>
           <Text style={styles.kicker}>إبلاغ سريع</Text>
           <Text style={styles.heading}>رأيت شاحنة النظافة؟</Text>
-          <Text style={styles.sub}>نستخدم موقعك في هذه اللحظة كموقع تقريبي للشاحنة فقط.</Text>
+          <Text style={styles.sub}>موقعك في هذه اللحظة يُستخدم كموقع تقريبي للشاحنة فقط.</Text>
         </View>
 
         <View style={styles.card}>
@@ -64,19 +94,21 @@ export default function ReportScreen() {
             <Ionicons name="location-outline" size={16} color={colors.primary} />
             <Text style={styles.neighborhood}>{neighborhoodLabel}</Text>
           </View>
-          <Text style={styles.body}>عند الضغط، نسجل إحداثيات الموقع في تلك اللحظة كموقع تقريبي للشاحنة. لا نعرض هويتك أو موقعك الشخصي للسكان.</Text>
+          <Text style={styles.body}>
+            إذا لم توجد جلسة رصد حية، يكون بلاغك أوليًا ويحتاج تأكيد شخص ثانٍ قريب. إذا كانت الشاحنة مؤكدة بالفعل، يضاف بلاغك مباشرة كنقطة جديدة لمسارها الحي بشرط أن يكون قريبًا منطقيًا من آخر رصد.
+          </Text>
           <Pressable style={[styles.button, loading && styles.disabled]} onPress={sendReport} disabled={loading}>
             <Ionicons name="navigate-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.buttonText}>{loading ? 'جارٍ تحديد الموقع...' : 'نعم، أرسل البلاغ'}</Text>
+            <Text style={styles.buttonText}>{loading ? 'جارٍ تحديد الموقع...' : 'نعم، الشاحنة هنا'}</Text>
           </Pressable>
         </View>
 
         <View style={styles.note}>
           <View style={styles.noteHead}>
             <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
-            <Text style={styles.noteTitle}>حماية من البلاغات الخاطئة</Text>
+            <Text style={styles.noteTitle}>رصد حي مع حماية من الأخطاء</Text>
           </View>
-          <Text style={styles.noteText}>البلاغ الأول يبقى «رصدًا أوليًا». بعد تأكيده من مستخدم آخر قريب يتحول إلى مرور مؤكد ويمكن تنبيه سكان المنطقة.</Text>
+          <Text style={styles.noteText}>بعد أول تأكيد من شخصين تبدأ جلسة رصد لمدة 45 دقيقة، وتتجدد مع كل مشاهدة حديثة ومنطقية للشاحنة.</Text>
         </View>
       </SafeAreaView>
     </MintBackground>
