@@ -69,7 +69,15 @@ export default function ReportScreen() {
         );
       }
     } catch (e: any) {
-      Alert.alert('تعذر إرسال البلاغ', e?.message ?? 'حاول مرة أخرى.');
+      const message = String(e?.message ?? '');
+      if (message.includes('OUTSIDE_SERVICE_AREA')) {
+        Alert.alert(
+          'الرصد خارج نطاق الخدمة',
+          'هذا الموقع بعيد عن حي بن يوب والحوش وعن محيط نقاط المسار المعتمدة، لذلك لن يتم احتسابه كرصد للشاحنة.',
+        );
+      } else {
+        Alert.alert('تعذر إرسال البلاغ', message || 'حاول مرة أخرى.');
+      }
     } finally {
       setLoading(false);
     }
@@ -95,7 +103,7 @@ export default function ReportScreen() {
             <Text style={styles.neighborhood}>{neighborhoodLabel}</Text>
           </View>
           <Text style={styles.body}>
-            إذا لم توجد جلسة رصد حية، يكون بلاغك أوليًا ويحتاج تأكيد شخص ثانٍ قريب. إذا كانت الشاحنة مؤكدة بالفعل، يضاف بلاغك مباشرة كنقطة جديدة لمسارها الحي بشرط أن يكون قريبًا منطقيًا من آخر رصد.
+            إذا لم توجد جلسة رصد حية، يكون بلاغك أوليًا ويحتاج تأكيد شخص ثانٍ قريب. إذا كانت الشاحنة مؤكدة بالفعل، يضاف بلاغك مباشرة كنقطة جديدة لمسارها الحي بشرط أن يكون قريبًا منطقيًا من آخر رصد وداخل نطاق الخدمة المعتمد.
           </Text>
           <Pressable style={[styles.button, loading && styles.disabled]} onPress={sendReport} disabled={loading}>
             <Ionicons name="navigate-outline" size={20} color="#FFFFFF" />
@@ -108,7 +116,7 @@ export default function ReportScreen() {
             <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
             <Text style={styles.noteTitle}>رصد حي مع حماية من الأخطاء</Text>
           </View>
-          <Text style={styles.noteText}>بعد أول تأكيد من شخصين تبدأ جلسة رصد لمدة 45 دقيقة، وتتجدد مع كل مشاهدة حديثة ومنطقية للشاحنة.</Text>
+          <Text style={styles.noteText}>لا يُعتمد أي رصد بعيد عن الحي أو عن محيط نقاط المسار المعتمدة. بعد أول تأكيد من شخصين تبدأ جلسة رصد لمدة 45 دقيقة، وتتجدد مع كل مشاهدة حديثة ومنطقية للشاحنة.</Text>
         </View>
       </SafeAreaView>
     </MintBackground>
