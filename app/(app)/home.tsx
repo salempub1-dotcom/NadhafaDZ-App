@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { router } from 'expo-router';
@@ -8,7 +8,18 @@ import { proximityLabel } from '@/lib/landmarks';
 import { MintBackground, PhotoFadeHero } from '@/ui/VisualShell';
 import { colors, radius, shadow } from '@/ui/theme';
 
-type LatestTruck = { id: string; neighborhood: string; latitude: number; longitude: number; confirmed_at: string | null; created_at: string };
+type LivePoint = {
+  report_id: string;
+  session_id: string;
+  neighborhood: string;
+  latitude: number;
+  longitude: number;
+  sighting_kind: string;
+  confirmed_at: string;
+  session_started_at: string;
+  session_last_sighting_at: string;
+  sightings_count: number;
+};
 
 function relativeTime(value?: string | null) {
   if (!value) return 'الآن';
@@ -22,18 +33,21 @@ function relativeTime(value?: string | null) {
 
 export default function HomeScreen() {
   const { neighborhood, setNeighborhood } = useNeighborhood();
-  const [latest, setLatest] = useState<LatestTruck | null>(null);
+  const [livePoints, setLivePoints] = useState<LivePoint[]>([]);
   const neighborhoodLabel = getNeighborhoodDisplayName(neighborhood);
+  const latest = livePoints[0] ?? null;
   const latestPlace = latest ? proximityLabel(latest.latitude, latest.longitude) : null;
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data } = await supabase.rpc('recent_truck_feed', { target_neighborhood: neighborhood });
-      if (active) setLatest(((data ?? [])[0] as LatestTruck | undefined) ?? null);
-    })();
-    return () => { active = false; };
+  const loadLive = useCallback(async () => {
+    const { data } = await supabase.rpc('live_truck_session_feed', { target_neighborhood: neighborhood });
+    setLivePoints((data ?? []) as LivePoint[]);
   }, [neighborhood]);
+
+  useEffect(() => {
+    void loadLive();
+    const id = setInterval(() => void loadLive(), 30_000);
+    return () => clearInterval(id);
+  }, [loadLive]);
 
   return (
     <MintBackground>
@@ -56,11 +70,11 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.infoGrid}>
-            <View style={styles.infoCard}>
+            <View style={[styles.infoCard, latest && styles.infoCardLive]}>
               <View style={styles.infoIcon}><Text style={styles.truckMini}>🚛</Text></View>
               <Text style={styles.infoLabel}>حالة الشاحنة</Text>
-              <Text style={[styles.infoValue, latest && styles.infoValueActive]}>{latest ? 'في الخدمة' : 'لا يوجد رصد'}</Text>
-              <Text style={styles.infoMeta}>{latest ? `آخر تحديث ${relativeTime(latest.confirmed_at ?? latest.created_at)}` : 'بانتظار رصد مؤكد'}</Text>
+              <Text style={[styles.infoValue, latest && styles.infoValueActive]}>{latest ? 'داخل المنطقة الآن' : 'لا يوجد رصد حي'}</Text>
+              <Text style={styles.infoMeta}>{latest ? `آخر مشاهدة ${relativeTime(latest.confirmed_at)}` : 'بانتظار رصد مؤكد'}</Text>
             </View>
 
             <View style={styles.infoCard}>
@@ -70,6 +84,17 @@ export default function HomeScreen() {
               <Text style={styles.infoMeta}>براقي • الجزائر</Text>
             </View>
           </View>
+
+          {latest && (
+            <Pressable style={styles.liveBanner} onPress={() => router.push('/(app)/map')}>
+              <View style={styles.livePulse}><View style={styles.liveDot} /></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.liveBannerTitle}>الشاحنة في جلسة رصد حية</Text>
+                <Text style={styles.liveBannerText}>{latestPlace ?? neighborhoodLabel} • {latest.sightings_count} مشاهدات مؤكدة • اضغط للمتابعة</Text>
+              </View>
+              <Ionicons name="chevron-back" size={20} color={colors.primary} />
+            </Pressable>
+          )}
 
           <View style={styles.selectorCard}>
             <Text style={styles.selectorTitle}>تغيير المنطقة</Text>
@@ -84,8 +109,8 @@ export default function HomeScreen() {
 
           <Pressable style={styles.reportCta} onPress={() => router.push('/(app)/report')}>
             <View style={styles.reportTextWrap}>
-              <Text style={styles.reportTitle}>إبلاغ عن الشاحنة</Text>
-              <Text style={styles.reportSub}>ساعد سكان {neighborhoodLabel} بمعرفة مكانها</Text>
+              <Text style={styles.reportTitle}>{latest ? 'حدّث مكان الشاحنة' : 'إبلاغ عن الشاحنة'}</Text>
+              <Text style={styles.reportSub}>{latest ? 'أضف مشاهدة جديدة للمسار الحي' : `ساعد سكان ${neighborhoodLabel} بمعرفة مكانها`}</Text>
             </View>
             <View style={styles.reportIcon}><Ionicons name="megaphone" size={27} color="#FFFFFF" /></View>
           </Pressable>
@@ -95,7 +120,7 @@ export default function HomeScreen() {
             <Pressable style={styles.serviceCard} onPress={() => router.push('/(app)/map')}>
               <View style={styles.serviceIcon}><Ionicons name="map" size={25} color={colors.primary} /></View>
               <Text style={styles.serviceTitle}>الخريطة الحية</Text>
-              <Text style={styles.serviceMeta}>موقع الشاحنة والرصد</Text>
+              <Text style={styles.serviceMeta}>موقع الشاحنة ومسارها</Text>
             </Pressable>
             <Pressable style={styles.serviceCard} onPress={() => router.push('/(app)/notifications')}>
               <View style={styles.serviceIcon}><Ionicons name="notifications" size={25} color={colors.primary} /></View>
@@ -103,17 +128,6 @@ export default function HomeScreen() {
               <Text style={styles.serviceMeta}>مرور واقتراب الشاحنة</Text>
             </Pressable>
           </View>
-
-          {latest && (
-            <Pressable style={styles.liveCard} onPress={() => router.push('/(app)/map')}>
-              <View style={styles.liveDot} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.liveTitle}>🚛 الشاحنة قريبة</Text>
-                <Text style={styles.liveText}>{latestPlace ?? `آخر رصد مؤكد في ${getNeighborhoodDisplayName(latest.neighborhood)}`} • اضغط لعرض الموقع</Text>
-              </View>
-              <Ionicons name="chevron-back" size={20} color={colors.primary} />
-            </Pressable>
-          )}
         </ScrollView>
       </SafeAreaView>
     </MintBackground>
@@ -133,12 +147,18 @@ const styles = StyleSheet.create({
   heroSub: { color: '#F4FFF8', textAlign: 'right', fontSize: 18, fontWeight: '800', marginTop: 2, textShadowColor: 'rgba(0,0,0,0.28)', textShadowRadius: 5 },
   infoGrid: { marginHorizontal: 18, flexDirection: 'row', gap: 10 },
   infoCard: { flex: 1, backgroundColor: colors.card, borderRadius: radius.lg, padding: 15, borderWidth: 1, borderColor: colors.border, ...shadow },
+  infoCardLive: { borderColor: '#A9D9BD', backgroundColor: '#FBFFFC' },
   infoIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' },
   truckMini: { fontSize: 23 },
   infoLabel: { color: colors.secondary, textAlign: 'right', marginTop: 10, fontSize: 12, fontWeight: '700' },
   infoValue: { color: colors.text, textAlign: 'right', fontWeight: '900', fontSize: 17, marginTop: 3 },
   infoValueActive: { color: colors.primary },
   infoMeta: { color: colors.secondary, textAlign: 'right', fontSize: 11, marginTop: 3 },
+  liveBanner: { marginHorizontal: 18, backgroundColor: '#FFFFFF', borderRadius: radius.lg, padding: 15, borderWidth: 1, borderColor: '#B9E1C9', flexDirection: 'row-reverse', alignItems: 'center', gap: 10, ...shadow },
+  livePulse: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#DDF4E6', alignItems: 'center', justifyContent: 'center' },
+  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  liveBannerTitle: { color: colors.text, textAlign: 'right', fontWeight: '900' },
+  liveBannerText: { color: colors.secondary, textAlign: 'right', fontSize: 12, marginTop: 3, lineHeight: 18 },
   selectorCard: { marginHorizontal: 18, backgroundColor: colors.card, borderRadius: radius.lg, padding: 14, borderWidth: 1, borderColor: colors.border },
   selectorTitle: { textAlign: 'right', color: colors.text, fontWeight: '900', marginBottom: 10 },
   selectorRow: { flexDirection: 'row', gap: 9 },
@@ -157,8 +177,4 @@ const styles = StyleSheet.create({
   serviceIcon: { width: 43, height: 43, borderRadius: 14, backgroundColor: colors.soft, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end' },
   serviceTitle: { color: colors.text, textAlign: 'right', fontWeight: '900', fontSize: 15, marginTop: 8 },
   serviceMeta: { color: colors.secondary, textAlign: 'right', fontSize: 11, marginTop: 3 },
-  liveCard: { marginHorizontal: 18, backgroundColor: '#FFFFFF', borderRadius: radius.lg, padding: 15, borderWidth: 1, borderColor: '#CDE5D7', flexDirection: 'row-reverse', alignItems: 'center', gap: 10 },
-  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
-  liveTitle: { color: colors.text, textAlign: 'right', fontWeight: '900' },
-  liveText: { color: colors.secondary, textAlign: 'right', fontSize: 12, marginTop: 3, lineHeight: 18 },
 });
