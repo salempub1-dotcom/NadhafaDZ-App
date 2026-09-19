@@ -30,7 +30,11 @@ function NotificationBridge() {
     function openNotification(response: Notifications.NotificationResponse | null) {
       if (!response) return;
       const data = response.notification.request.content.data;
-      if (data?.type === 'truck_confirmed') {
+      if (
+        data?.type === 'truck_confirmed' ||
+        data?.type === 'truck_session_started' ||
+        data?.type === 'truck_location_update'
+      ) {
         router.push('/(app)/map');
       }
     }
