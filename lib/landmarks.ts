@@ -53,6 +53,22 @@ export const SERVICE_LANDMARKS: ServiceLandmark[] = [
     kind: 'road',
   },
   {
+    key: 'reference-6',
+    name: 'النقطة المرجعية 6',
+    latitude: 36.655100,
+    longitude: 3.118318,
+    neighborhood: 'بن يوب',
+    kind: 'road',
+  },
+  {
+    key: 'reference-7',
+    name: 'النقطة المرجعية 7',
+    latitude: 36.656365,
+    longitude: 3.117925,
+    neighborhood: 'بن يوب',
+    kind: 'road',
+  },
+  {
     key: 'reference-8-m438-rcw',
     name: 'النقطة المرجعية 8 (M438+RCW)',
     latitude: 36.654640,
