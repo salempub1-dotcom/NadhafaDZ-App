@@ -10,6 +10,7 @@ const PRIMARY = '#008B4C';
 const DARK = '#073C32';
 const WARNING = '#D98E04';
 const STALE = '#6B7280';
+const REFERENCE = '#2F80ED';
 const NEIGHBORHOODS = ['بن يوب', 'العميرات'] as const;
 const AUTO_REFRESH_MS = 30_000;
 const SERVICE_START: LatLng = { latitude: 36.65164, longitude: 3.108959 };
@@ -43,7 +44,6 @@ type PendingReport = {
 };
 
 type MapKind = 'standard' | 'satellite' | 'hybrid';
-
 type Freshness = 'fresh' | 'recent' | 'old';
 
 function validPoint(lat: unknown, lon: unknown) {
@@ -221,6 +221,23 @@ export default function MapScreen() {
           onMapReady={() => setMapReady(true)}
           mapPadding={{ top: 12, right: 8, bottom: 125, left: 8 }}
         >
+          {SERVICE_LANDMARKS.map((landmark, index) => (
+            <Marker
+              key={`reference-${landmark.key}`}
+              coordinate={{ latitude: landmark.latitude, longitude: landmark.longitude }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              title={`نقطة مرجعية ${index + 1}`}
+              description={`${landmark.name} • ${displayNeighborhood(landmark.neighborhood)}`}
+              zIndex={10}
+            >
+              <View style={styles.referenceMarkerWrap}>
+                <View style={[styles.referenceMarker, index === 0 && styles.referenceMarkerStart]}>
+                  <Text style={styles.referenceMarkerText}>{index + 1}</Text>
+                </View>
+              </View>
+            </Marker>
+          ))}
+
           {routePoints.length >= 2 && (
             <Polyline coordinates={routePoints.slice(-6)} strokeColor={PRIMARY} strokeWidth={5} lineCap="round" lineJoin="round" />
           )}
@@ -250,6 +267,11 @@ export default function MapScreen() {
         </MapView>
 
         {loading && <View style={styles.loadingChip}><ActivityIndicator color={PRIMARY} size="small" /><Text style={styles.loadingText}>تحديث الرصد...</Text></View>}
+
+        <View style={styles.referenceLegend} pointerEvents="none">
+          <View style={styles.referenceLegendDot} />
+          <Text style={styles.referenceLegendText}>النقاط المرجعية الثابتة</Text>
+        </View>
 
         <View style={styles.floatingActions}>
           <Pressable style={styles.floatingButton} onPress={focusServiceArea}><Ionicons name="map" size={19} color={PRIMARY} /><Text style={styles.floatingText}>الحي</Text></Pressable>
@@ -292,6 +314,9 @@ const styles = StyleSheet.create({
   mapShell: { flex: 1, overflow: 'hidden' },
   loadingChip: { position: 'absolute', top: 14, alignSelf: 'center', backgroundColor: '#FFFFFFEE', borderRadius: 20, paddingHorizontal: 13, paddingVertical: 8, flexDirection: 'row-reverse', alignItems: 'center', gap: 7 },
   loadingText: { color: DARK, fontWeight: '800', fontSize: 12 },
+  referenceLegend: { position: 'absolute', top: 16, right: 16, backgroundColor: '#FFFFFFEE', borderRadius: 18, paddingHorizontal: 11, paddingVertical: 8, flexDirection: 'row-reverse', alignItems: 'center', gap: 7, elevation: 2 },
+  referenceLegendDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: REFERENCE },
+  referenceLegendText: { color: DARK, fontSize: 11, fontWeight: '800' },
   floatingActions: { position: 'absolute', top: 18, left: 18, gap: 10 },
   floatingButton: { minWidth: 94, height: 48, borderRadius: 18, backgroundColor: '#FFFFFFEE', flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'center', gap: 7, elevation: 3 },
   floatingButtonPrimary: { backgroundColor: PRIMARY },
@@ -302,6 +327,10 @@ const styles = StyleSheet.create({
   bottomTitle: { color: DARK, fontWeight: '900', fontSize: 18, textAlign: 'right' },
   bottomText: { color: '#6B7280', textAlign: 'right', marginTop: 6, lineHeight: 20 },
   bottomMeta: { color: PRIMARY, textAlign: 'right', marginTop: 6, fontWeight: '800', fontSize: 12 },
+  referenceMarkerWrap: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
+  referenceMarker: { width: 28, height: 28, borderRadius: 14, backgroundColor: REFERENCE, borderWidth: 3, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', elevation: 5 },
+  referenceMarkerStart: { backgroundColor: PRIMARY },
+  referenceMarkerText: { color: '#FFFFFF', fontSize: 12, fontWeight: '900' },
   truckMarkerWrap: { width: 66, height: 66, alignItems: 'center', justifyContent: 'center' },
   pulseRing: { position: 'absolute', width: 48, height: 48, borderRadius: 24, borderWidth: 2, backgroundColor: '#008B4C20' },
   truckMarkerCore: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFF', borderWidth: 3, alignItems: 'center', justifyContent: 'center', elevation: 6 },
