@@ -7,10 +7,10 @@ export type ServiceLandmark = {
   kind: 'mosque' | 'area' | 'road' | 'pharmacy' | 'school' | 'shop' | 'workshop';
 };
 
-// Canonical pilot-corridor points confirmed by the user from Google Maps.
-// Order matters: 1 -> 5 follows the truck's operational road from the main junction to
-// the final collection point. After point 5 the truck enters the housing complex to
-// collect waste, then exits again; the lower unpaved road is deliberately excluded.
+// Canonical pilot reference points confirmed by the user from Google Maps.
+// Points 1 -> 5 follow the original operational corridor. Additional numbered
+// points are kept in the same list so they remain permanently visible on the map
+// and progressively define the full Ben Youb / Al Omayrat service perimeter.
 export const SERVICE_LANDMARKS: ServiceLandmark[] = [
   {
     key: 'route-1-start-houch',
@@ -51,6 +51,14 @@ export const SERVICE_LANDMARKS: ServiceLandmark[] = [
     longitude: 3.118758,
     neighborhood: 'بن يوب',
     kind: 'road',
+  },
+  {
+    key: 'reference-8-m438-rcw',
+    name: 'النقطة المرجعية 8 (M438+RCW)',
+    latitude: 36.654640,
+    longitude: 3.116191,
+    neighborhood: 'بن يوب',
+    kind: 'area',
   },
 ];
 
